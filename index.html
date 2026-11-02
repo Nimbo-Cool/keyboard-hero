@@ -8928,7 +8928,7 @@ function tbPlay(o) {
       o.net.onSnap = s => { opSnap = s; };
       o.net.onAttack = n => { swing('op'); me1.receive(n); };
       o.net.onFx = d => { if (d.label) pop($('tbOpPop'), d.label, d.big ? 'big' : ''); if (d.ko) pop($('tbOpPop'), '當機！', 'ko'); if (d.rows) opV.flash(d.rows); if (d.bombs && d.bombs.length) opV.boom(d.bombs); };
-      o.net.onLeave = () => { if (!ended) { pop($('tbPop'), '對手離開了', 'big'); finish('leave'); } };
+      o.net.onLeave = done => { if (ended) return; if (done) { finish('time'); return; } pop($('tbPop'), '對手離開了', 'big'); finish('leave'); };
     }
     // 按鍵（重複移動照當年手感：先停一下再連續滑）
     const held = {}; let dasDir = 0, dasT = 0, arrT = 0, softOn = false;
@@ -8966,7 +8966,7 @@ function tbPlay(o) {
         const left = sprint ? (now - t0) : Math.max(0, TB.MATCH * 1000 - (now - t0));
         setHTML('tbTime', sprint ? `${(left / 1000).toFixed(2)}` : `${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, '0')}`);
         if (sprint && me1.lines >= 40) finish('sprint');
-        if (!sprint && left <= 0) finish('time');
+        if (!sprint && left <= 0) finishNet('time');
         if (o.mode === 'net') o.net.tick(me1);
       }
       const mk = S => ({ grid: S.grid.slice(TB.HID), cur: S.cells().map(([x, y]) => [x, y - TB.HID]), ghost: S.ghostCells().map(([x, y]) => [x, y - TB.HID]), k: S.cur && S.cur.k, pending: S.pendingN(), dead: S.pause > 0 });
@@ -8983,7 +8983,7 @@ function tbPlay(o) {
         const st = n => '當機 ' + [...Array(TB.KO_MAX)].map((_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
         setHTML('tbStarMe', st(myKo)); setHTML('tbStarOp', st(opKo));
         setHTML('tbStatR', `送出 <b>${op1 ? op1.sent : o.net ? o.net.oppSent() : 0}</b> 行`);
-        if (started && !ended && (myKo >= TB.KO_MAX || opKo >= TB.KO_MAX)) finish('ko');
+        if (started && !ended && !finWait && (myKo >= TB.KO_MAX || opKo >= TB.KO_MAX)) finishNet('ko');
       }
       // 攻擊光束
       if (beams.length || fxDirty) fg.clearRect(0, 0, fxc.width, fxc.height);
@@ -9008,6 +9008,15 @@ function tbPlay(o) {
       else { clearInterval(cd); $('tbCount').textContent = '開始！'; beep(880, .2, 'square', .05); setTimeout(() => { if ($('tbCount')) $('tbCount').className = 'tbcount'; }, 600); started = true; t0 = Date.now(); last = performance.now(); }
     }, 200);
     const cleanup = () => { clearInterval(cd); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('blur', blur); };
+    // 連線對戰時間到／K.O.：先停住、送出最後的盤面，等對手的最後盤面（最多 2.5 秒）再算勝負，兩邊結果才會一樣
+    let finWait = false;
+    function finishNet(why) {
+      if (ended || finWait) return;
+      if (o.mode !== 'net' || (why !== 'time' && why !== 'ko') || o.net.opp.e) return finish(why);
+      finWait = true; me1.over = true; o.net.mark();
+      const tw = Date.now();
+      const iv = setInterval(() => { if (o.net.opp.e || Date.now() - tw > 2500 || ended) { clearInterval(iv); finWait = false; finish(why); } }, 100);
+    }
     function finish(why) {
       if (ended) return; ended = true; me1.over = true; if (op1) op1.over = true;
       cleanup();
@@ -9415,7 +9424,7 @@ function pvPlay(o) {
     // ===== rollback 同步 =====
     const DELAY = net ? (o.via === 'p2p' ? 1 : 2) : 0, MAXRB = 12;
     const myIn = [], opIn = [], used = [], hist = [];
-    let opLast = -1, opFrame = 0, rb = Infinity, lastMsg = Date.now(), cpu = net ? null : pvCpu(o.level);
+    let opLast = -1, opContig = DELAY - 1, opFrame = 0, rb = Infinity, lastMsg = Date.now(), cpu = net ? null : pvCpu(o.level);
     const inputAt = (arr, f) => f < DELAY ? PV_IDLE : arr[f];
     const predict = f => { for (let k = f; k >= 0 && k > f - 30; k--) if (opIn[k] != null) return opIn[k] >= 9 ? opIn[k] - 9 : opIn[k]; return PV_IDLE; };
     if (net) {
@@ -9426,6 +9435,7 @@ function pvPlay(o) {
           for (let k = 0; k < m.d.length; k++) {
             const f = m.f - m.d.length + 1 + k; if (f < 0 || opIn[f] != null) continue;
             opIn[f] = m.d[k]; if (f > opLast) opLast = f;
+            while (opIn[opContig + 1] != null) opContig++;   // 從頭到這一格都收齊了（中間漏掉就會停在漏掉的地方）
             if (f < frame && used[f] !== m.d[k]) rb = Math.min(rb, f);
           }
         } else if (m.t === 'bye' && !ended) { msg('對手離開了', 0); finish('leave'); }
@@ -9447,7 +9457,8 @@ function pvPlay(o) {
       }
       if (net) {
         myIn[frame + DELAY] = o.bot ? o.bot(pvClone(S), side) : sample();
-        const d = []; for (let k = Math.max(0, frame + DELAY - 9); k <= frame + DELAY; k++) d.push(inputAt(myIn, k));
+        // 每次都附上最近幾格的按鍵：中轉偶爾漏一兩筆也補得回來
+        const d = [], W = o.link.via === 'relay' ? 24 : 9; for (let k = Math.max(0, frame + DELAY - W); k <= frame + DELAY; k++) d.push(inputAt(myIn, k));
         // 走 Firebase 中轉時：按鍵有變才馬上送，沒變就每 3 格送一次（省流量）；直連每格都送
         if (o.link.via !== 'relay' || frame % 3 === 0 || myIn[frame + DELAY] !== inputAt(myIn, frame + DELAY - 1)) o.link.send({ t: 'i', f: frame + DELAY, d, n: frame });
       } else {
@@ -9458,25 +9469,35 @@ function pvPlay(o) {
       delete hist[frame - MAXRB - 4];
       frame++;
     };
-    let last = performance.now(), pingT = 0;
-    const loop = ts => {
-      const dt = Math.min(.1, (ts - last) / 1000); last = ts;
-      const now = Date.now();
+    let last = performance.now(), pingT = 0, lastLoopAt = performance.now();
+    // 模擬往前（含送出自己的按鍵）；前景每格呼叫，分頁在背景時由背景計時器呼叫
+    const sim = (now, dt, cap) => {
       if (!ended) {
+        // 對手已經開始了（自己的時鐘比較慢）：直接跟上
+        if (net && now < startLocal && opFrame > 3) startLocal = now - opFrame * 1000 / PV.FPS;
         if (now < startLocal) { const c = Math.ceil((startLocal - now) / 1000); msg(c > 0 ? String(c) : '', 0); }
         else {
           if (frame === 0) { msg('開始！'); beep(880, .2, 'square', .05); }
           const target = Math.floor((now - startLocal) * PV.FPS / 1000);
           let n = 0;
-          while (frame <= target && n < 6) {
-            if (net && frame - opLast > MAXRB) { startLocal += dt * 1000 / Math.max(1, n + 1); break; } // 對手太慢，暫停等他
+          // 自己落後對手（分頁剛回到前景）：追上去
+          if (net && opFrame > frame + 4) startLocal = Math.min(startLocal, now - (opFrame - 2) * 1000 / PV.FPS);
+          while (frame <= target && n < cap) {
+            if (net && frame - opContig > MAXRB) { startLocal += dt * 1000 / Math.max(1, n + 1); break; } // 對手太慢，暫停等他
             advance(); n++;
           }
           if (net && frame - opFrame > 2) startLocal += 2;  // 比對手快就慢一點點
-          if (S.over >= 0 && S.t > 40 && (!net || opLast >= frame - 1)) finish('end');
-          if (net && now - lastMsg > 6000) { msg('對手斷線了', 0); finish('leave'); }
+          // 結束：只要對手的按鍵確認到「結束畫面第 41 格」就好（不用等到自己現在這一格，不然比較快的一方停了，另一方會一直等）
+          if (S.over >= 0 && S.t > 40 && (!net || opContig >= S.f - S.t + 40)) finish('end');
+          if (net && now - lastMsg > 10000) { msg('對手斷線了', 0); finish('leave'); }
         }
       }
+    };
+    const loop = ts => {
+      const dt = Math.min(.1, (ts - last) / 1000); last = ts;
+      const now = Date.now();
+      if (!ended) sim(now, dt, 6);
+      lastLoopAt = performance.now();
       V.draw(S, flip, dt);
       const L = flip ? 1 : 0;
       $('pvS0').textContent = S.sc[L]; $('pvS1').textContent = S.sc[1 - L];
@@ -9487,7 +9508,9 @@ function pvPlay(o) {
     // 就算某一格出錯，也不讓整個遊戲停住（不用重新整理）
     const loopSafe = ts => { try { loop(ts); } catch (e) { console.warn('遊戲畫面出錯', e); window.__frameErr = (window.__frameErr || 0) + 1; if (!ended) raf = requestAnimationFrame(loopSafe); } };
     raf = requestAnimationFrame(loopSafe);
-    const cleanup = () => { removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('blur', blur); removeEventListener('resize', fit); };
+    // 分頁在背景時畫面不更新，但模擬和送按鍵要繼續，不然對手會以為你斷線
+    const stopBg = net && typeof bmBgTicker === 'function' ? bmBgTicker(() => { if (ended || performance.now() - lastLoopAt < 200) return; try { sim(Date.now(), .05, 60); } catch (e) { console.warn(e); } }) : () => {};
+    const cleanup = () => { stopBg(); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('blur', blur); removeEventListener('resize', fit); };
     function finish(why) {
       if (ended) return; ended = true; cleanup();
       let win = null, title;
@@ -10750,7 +10773,7 @@ function bmPlay(o) {
       else if (e.t === 'die') beep(e.i === mine ? 160 : 400, .3, 'square', .05, 0, -200);
     });
     // ---------- 時間軸（連線時用回溯修正） ----------
-    const DELAY = net ? 2 : 0, MAXRB = 24;
+    const DELAY = net ? 2 : 0, MAXRB = 24, HB = 4;
     let cur = 0;                                   // 已經算到第幾步
     const hist = new Map();                        // 第 f 步之前的狀態
     const used = new Map();                        // 第 f 步用了哪些輸入
@@ -10767,6 +10790,7 @@ function bmPlay(o) {
     if (net) {
       o.net.onMsg = (s, m) => {
         const r = R[s]; if (!r || s === mine) return;
+        r.heard = performance.now(); if (!m.q && m.f > DELAY + 2) peerStarted = true;
         if (m.q) { if (r.quit === Infinity) { r.quit = Math.max(m.f, r.conf + 1); if (r.quit < cur) rbFrom = Math.min(rbFrom, r.quit); } return; }
         // 照 frame 順序插入（網路偶爾會讓訊息晚到、順序顛倒，不能直接丟掉）
         if (r.ch.some(c => c[0] === m.f)) return;
@@ -10794,10 +10818,34 @@ function bmPlay(o) {
     // 迴圈
     const t0 = performance.now(), startAt = o.startAt || Date.now() + 3000;
     let lastT = performance.now();
-    const frame = ts => {
-      if (!$('bmwrap')) { cleanup(); return; }   // 畫面被關掉了：停止迴圈
-      const dt = Math.min(.1, (ts - lastT) / 1000); lastT = ts;
-      const now = Date.now(), target = Math.floor((now - startAt) / (1000 / BM.TPS));
+    // ---- 連線保險 ----
+    let peerStarted = false, lastFrameAt = performance.now();
+    R.forEach(r => { r.heard = performance.now() + Math.max(0, startAt - Date.now()); });
+    const maxConf = () => humans.reduce((m, s) => Math.max(m, R[s].quit !== Infinity ? -1 : R[s].conf), -1);
+    const KICK_MS = 10000;
+    const silentFor = s => performance.now() - R[s].heard;
+    // 卡住在等誰
+    const blocking = () => { const mc = minConf(); return humans.filter(s => R[s].quit === Infinity && R[s].conf === mc && cur - mc > MAXRB); };
+    const waitText = () => {
+      const b = blocking(); if (!b.length) return '等待其他玩家的連線……';
+      const sec = Math.ceil((KICK_MS - Math.max(...b.map(silentFor))) / 1000);
+      return `等待 ${b.map(s => names[s]).join('、')} 的連線……` + (sec <= 7 ? `（${Math.max(0, sec)} 秒後沒回應就讓他先離開）` : '');
+    };
+    // 一直沒回應的人：由還連得上的人裡面座位最前面的那一位，替他送出「離開」，大家在同一步把他移出比賽
+    const kickCheck = () => {
+      if (ended || typeof tbNet === 'undefined' || tbNet.conn === false) return;
+      blocking().forEach(s => {
+        if (R[s].kick || silentFor(s) < KICK_MS) return;
+        const ok = humans.filter(h => h !== s && R[h].quit === Infinity && silentFor(h) < KICK_MS).concat(mine).sort((x, y) => x - y);
+        if (ok[0] !== mine) return;
+        R[s].kick = 1; o.net.quitFor(s, Math.max(cur, R[s].conf + 1) + DELAY);
+        toast(`${names[s]} 連線中斷，先讓他離開，比賽繼續`, 3000);
+      });
+    };
+    // 模擬一步一步往前（含送出自己的輸入）；畫面在前景時每格呼叫，分頁在背景時由背景計時器呼叫
+    const tick = (now, target, dt, cap, live) => {
+      let evs = null;
+      if (!started && !ended && peerStarted) started = true;   // 自己的時鐘比較慢：別人已經開始了，就跟上
       if (started && !ended) {
         // 回溯：有人的輸入跟猜的不一樣，從那一步重算
         if (rbFrom < cur) {
@@ -10806,27 +10854,38 @@ function bmPlay(o) {
           rbFrom = Infinity;
         }
         let n = 0;
-        while (cur < target && n < 6) {
-          if (net && cur - minConf() > MAXRB) { stallT += dt; break; }
+        if (net) kickCheck();
+        // 自己落後別人（時鐘比較慢、分頁剛回到前景）：追上去，不要讓大家等
+        let tgt = target;
+        if (net) { const mx = maxConf(); if (mx - DELAY - 2 > tgt) tgt = Math.min(mx - DELAY - 2, cur + 60); }
+        while (cur < tgt && n < cap) {
+          if (net && cur - minConf() > MAXRB) { stallT += dt; NETSTAT.stall = (NETSTAT.stall || 0) + dt; break; }
           stallT = 0;
           const f = cur + DELAY;
           if (!localIn.has(f)) {
             const v = window.__bmBotSample ? (st.p[mine].alive ? bmBot(bmClone(st), mine) : 0) : sample();
             localIn.set(f, v);
-            if (net && (v !== lastSentV || f - lastSent >= 8)) { o.net.send(f, v); lastSent = f; lastSentV = v; }
+            if (net && (v !== lastSentV || f - lastSent >= (window.__HB || HB))) { o.net.send(f, v); lastSent = f; lastSentV = v; }
           }
           simOne(true); n++;
         }
         if (window.__bmTrace) { const cf = Math.min(cur - 1, net ? minConf() : cur - 1); for (let f = traceF + 1; f <= cf; f++) { if (f % 20 === 0) { const s2 = f + 1 === cur ? st : hist.get(f + 1); if (s2) window.__bmTrace[f] = [s2.r, s2.p.map(p => p.x + ',' + p.y + ',' + p.alive).join(';'), s2.bombs.length].join('|'); } traceF = f; } }
         for (const f of hist.keys()) if (f < cur - MAXRB - 12) { hist.delete(f); used.delete(f); }
         for (const f of localIn.keys()) if (f < cur - 400) localIn.delete(f);
-        sfx(evq.splice(0));
-        $('bmNote').textContent = stallT > 1 ? '等待其他玩家的連線……' : '';
+        { const ev2 = evq.splice(0); if (live) sfx(ev2); }
+        $('bmNote').textContent = stallT > 1 ? waitText() : '';
         // 結束：要等那一步的輸入都確認了
         if (st.over !== -1 && (!net || overSettled())) { if (overSeen < 0) overSeen = now; if (now - overSeen > 900) finish(); }
         else overSeen = -1;
         if (!net && !st.p[mine].alive && st.over === -1 && st.t - st.p[mine].dieT > 30) finish();
       }
+      return evs;
+    };
+    const frame = ts => {
+      if (!$('bmwrap')) { cleanup(); return; }   // 畫面被關掉了：停止迴圈
+      const dt = Math.min(.1, (ts - lastT) / 1000); lastT = ts;
+      const now = Date.now(), target = Math.floor((now - startAt) / (1000 / BM.TPS));
+      let evs = tick(now, target, dt, 6, true); lastFrameAt = performance.now();
       draw(st, { me: mine });
       // 側欄
       const left = Math.max(0, Math.ceil((BM.SD - st.t) / BM.TPS));
@@ -10838,13 +10897,16 @@ function bmPlay(o) {
     // 就算某一格出錯，也不讓整個遊戲停住（不用重新整理）
     const frameSafe = ts => { try { frame(ts); } catch (e) { console.warn('遊戲畫面出錯', e); window.__frameErr = (window.__frameErr || 0) + 1; if (!ended) raf = requestAnimationFrame(frameSafe); } };
     raf = requestAnimationFrame(frameSafe);
+    // 分頁在背景（縮小、切到別的分頁）時畫面不會更新，但模擬和送輸入要繼續，不然其他人會一直等
+    const stopBg = net ? bmBgTicker(() => { if (ended || !$('bmwrap') || performance.now() - lastFrameAt < 200) return; try { const now = Date.now(); tick(now, Math.floor((now - startAt) / (1000 / BM.TPS)), .05, 60, false); } catch (e) { console.warn(e); } }) : () => {};
+    if (net) o.net.onKicked = () => { if (ended) return; toast('你的連線太久沒有回應，這一場先離開了', 4000); finish(true); };
     const cd = setInterval(() => {
       if (!$('bmwrap')) { clearInterval(cd); return; }
       const s = Math.ceil((startAt - Date.now()) / 1000);
-      if (s > 0) { $('bmCount').textContent = s; $('bmCount').className = 'tbcount on'; beep(440, .08, 'square', .04); }
+      if (s > 0 && !peerStarted) { $('bmCount').textContent = s; $('bmCount').className = 'tbcount on'; beep(440, .08, 'square', .04); }
       else { clearInterval(cd); $('bmCount').textContent = '開始！'; beep(880, .2, 'square', .05); setTimeout(() => { if ($('bmCount')) $('bmCount').className = 'tbcount'; }, 600); started = true; }
     }, 200);
-    const cleanup = () => { clearInterval(cd); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('keydown', kdTap, true); removeEventListener('blur', blur); };
+    const cleanup = () => { stopBg(); clearInterval(cd); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('keydown', kdTap, true); removeEventListener('blur', blur); };
     function finish(quit) {
       if (ended) return; ended = true; cleanup();
       if (net) o.net.finish(quit, cur + DELAY);
@@ -10874,6 +10936,15 @@ function bmPlay(o) {
 //  寶石炸彈陣的連線：每個人只送「按鍵有變的時候」＋每 0.25 秒一次心跳
 // =====================================================================
 const NETSTAT = { early: 0, late: 0 }; if (typeof window !== 'undefined') window.__bmNetStat = NETSTAT;
+// 背景計時器：分頁在背景時 requestAnimationFrame 會停、一般計時器也會變很慢，
+// 改用 Worker 計時（不受背景節流影響），讓連線對戰的模擬繼續跑
+function bmBgTicker(fn) {
+  try {
+    const url = URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},50)'], { type: 'text/javascript' }));
+    const w = new Worker(url); w.onmessage = () => fn();
+    return () => { try { w.terminate(); URL.revokeObjectURL(url); } catch (e) {} };
+  } catch (e) { const id = setInterval(fn, 50); return () => clearInterval(id); }
+}
 function bmNet(base, uid, roster, mySlot, host) {
   const D = tbNet.D, db = tbNet.db, N = { onMsg: null, onBye: null, subs: [], bye: new Set(), ended: false, q: [] };
   N.flush = () => { const q = N.q; N.q = []; q.forEach(([s, m]) => N.onMsg && N.onMsg(s, m)); };
@@ -10886,8 +10957,10 @@ function bmNet(base, uid, roster, mySlot, host) {
     N.subs.push(D.onValue(D.ref(db, `${base}/bye/${s}`), sn => { if (sn.val()) { N.bye.add(s); N.onBye && N.onBye(s); } }));
   });
   N.gone = s => N.bye.has(s);
+  // 自己的頻道：如果別人因為太久沒回應替我送了「離開」，我要知道
+  N.subs.push(D.onValue(D.ref(db, `${base}/kick/${mySlot}`), sn => { if (sn.val() && !N.ended && N.onKicked) N.onKicked(); }));   // 只聽一個小旗子，不用下載自己的按鍵
   N.send = (f, i) => D.push(D.ref(db, `${base}/in/${mySlot}`), { f, i });
-  N.quitFor = (s, f) => D.push(D.ref(db, `${base}/in/${s}`), { f, q: 1 });
+  N.quitFor = (s, f) => { D.push(D.ref(db, `${base}/in/${s}`), { f, q: 1 }); D.set(D.ref(db, `${base}/kick/${s}`), true); };
   N.finish = (quit, f) => {
     if (N.ended) return; N.ended = true;
     if (quit) { D.push(D.ref(db, `${base}/in/${mySlot}`), { f, q: 1 }); D.set(byeRef, true); }
@@ -11653,7 +11726,7 @@ function smPlay(o) {
       else if (e.t === 'slam') beep(80, .25, 'sawtooth', .06, 0, -30);
     });
     // ---------- 時間軸（連線時用回溯修正，跟寶石炸彈陣一樣） ----------
-    const DELAY = net ? 2 : 0, MAXRB = 30;
+    const DELAY = net ? 2 : 0, MAXRB = 30, HB = 4;   // HB：按鍵沒變時，每幾步補送一次（越小越不容易卡，流量稍多）
     let cur = 0;
     const hist = new Map(), used = new Map(), localIn = new Map();
     const R = roster.map(() => ({ ch: [], conf: -1, quit: Infinity }));
@@ -11668,6 +11741,7 @@ function smPlay(o) {
     if (net) {
       o.net.onMsg = (s, m) => {
         const r = R[s]; if (!r || s === mine) return;
+        r.heard = performance.now(); if (!m.q && m.f > DELAY + 2) peerStarted = true;
         if (m.q) { if (r.quit === Infinity) { r.quit = Math.max(m.f, r.conf + 1); if (r.quit < cur) rbFrom = Math.min(rbFrom, r.quit); } return; }
         if (r.ch.some(c => c[0] === m.f)) return;
         const prev = inAt(s, m.f);
@@ -11691,11 +11765,34 @@ function smPlay(o) {
     let stallT = 0, overSeen = -1, lastHud = '', traceF = -1;
     const startAt = o.startAt || Date.now() + 3000;
     let lastT = performance.now();
-    const frame = ts => {
-      if (!$('smwrap')) { cleanup(); return; }
-      const dt = Math.min(.1, (ts - lastT) / 1000); lastT = ts;
-      const now = Date.now(), target = Math.floor((now - startAt) / (1000 / SM.TPS));
+    // ---- 連線保險 ----
+    let peerStarted = false, lastFrameAt = performance.now();
+    R.forEach(r => { r.heard = performance.now() + Math.max(0, startAt - Date.now()); });
+    const maxConf = () => humans.reduce((m, s) => Math.max(m, R[s].quit !== Infinity ? -1 : R[s].conf), -1);
+    const KICK_MS = 10000;
+    const silentFor = s => performance.now() - R[s].heard;
+    // 卡住在等誰
+    const blocking = () => { const mc = minConf(); return humans.filter(s => R[s].quit === Infinity && R[s].conf === mc && cur - mc > MAXRB); };
+    const waitText = () => {
+      const b = blocking(); if (!b.length) return '等待其他玩家的連線……';
+      const sec = Math.ceil((KICK_MS - Math.max(...b.map(silentFor))) / 1000);
+      return `等待 ${b.map(s => names[s]).join('、')} 的連線……` + (sec <= 7 ? `（${Math.max(0, sec)} 秒後沒回應就讓他先離開）` : '');
+    };
+    // 一直沒回應的人：由還連得上的人裡面座位最前面的那一位，替他送出「離開」，大家在同一步把他移出比賽
+    const kickCheck = () => {
+      if (ended || typeof tbNet === 'undefined' || tbNet.conn === false) return;
+      blocking().forEach(s => {
+        if (R[s].kick || silentFor(s) < KICK_MS) return;
+        const ok = humans.filter(h => h !== s && R[h].quit === Infinity && silentFor(h) < KICK_MS).concat(mine).sort((x, y) => x - y);
+        if (ok[0] !== mine) return;
+        R[s].kick = 1; o.net.quitFor(s, Math.max(cur, R[s].conf + 1) + DELAY);
+        toast(`${names[s]} 連線中斷，先讓他離開，比賽繼續`, 3000);
+      });
+    };
+    // 模擬一步一步往前（含送出自己的輸入）；畫面在前景時每格呼叫，分頁在背景時由背景計時器呼叫
+    const tick = (now, target, dt, cap, live) => {
       let evs = null;
+      if (!started && !ended && peerStarted) started = true;   // 自己的時鐘比較慢：別人已經開始了，就跟上
       if (started && !ended) {
         if (rbFrom < cur) {
           const f = Math.max(rbFrom, cur - MAXRB - 8);
@@ -11703,25 +11800,37 @@ function smPlay(o) {
           rbFrom = Infinity;
         }
         let n = 0;
-        while (cur < target && n < 6) {
-          if (net && cur - minConf() > MAXRB) { stallT += dt; break; }
+        if (net) kickCheck();
+        // 自己落後別人（時鐘比較慢、分頁剛回到前景）：追上去，不要讓大家等
+        let tgt = target;
+        if (net) { const mx = maxConf(); if (mx - DELAY - 2 > tgt) tgt = Math.min(mx - DELAY - 2, cur + 60); }
+        while (cur < tgt && n < cap) {
+          if (net && cur - minConf() > MAXRB) { stallT += dt; NETSTAT.stall = (NETSTAT.stall || 0) + dt; break; }
           stallT = 0;
           const f = cur + DELAY;
           if (!localIn.has(f)) {
             const v = window.__smBot ? (st.p[mine].alive ? smBot(smClone(st), mine) : 0) : sample();
             localIn.set(f, v);
-            if (net && (v !== lastSentV || f - lastSent >= 8)) { o.net.send(f, v); lastSent = f; lastSentV = v; }
+            if (net && (v !== lastSentV || f - lastSent >= (window.__HB || HB))) { o.net.send(f, v); lastSent = f; lastSentV = v; }
           }
           simOne(true); n++;
         }
         if (window.__smTrace) { const cf = Math.min(cur - 1, net ? minConf() : cur - 1); for (let f = traceF + 1; f <= cf; f++) { if (f % 30 === 0) { const s2 = f + 1 === cur ? st : hist.get(f + 1); if (s2) window.__smTrace[f] = [s2.r, s2.p.map(p => p.x + ',' + p.y + ',' + p.hp + ',' + p.stock).join(';'), s2.pj.length].join('|'); } traceF = f; } }
         for (const f of hist.keys()) if (f < cur - MAXRB - 12) { hist.delete(f); used.delete(f); }
         for (const f of localIn.keys()) if (f < cur - 400) localIn.delete(f);
-        evs = evq.splice(0); sfx(evs);
-        setHTML('smNote', stallT > 1 ? '等待其他玩家的連線……' : '');
+        evs = evq.splice(0); if (live) sfx(evs);
+        setHTML('smNote', stallT > 1 ? waitText() : '');
         if (st.over !== -1 && (!net || overSettled())) { if (overSeen < 0) overSeen = now; if (now - overSeen > 1200) finish(); }
         else overSeen = -1;
       }
+      return evs;
+    };
+    const frame = ts => {
+      if (!$('smwrap')) { cleanup(); return; }
+      const dt = Math.min(.1, (ts - lastT) / 1000); lastT = ts;
+      const now = Date.now(), target = Math.floor((now - startAt) / (1000 / SM.TPS));
+      let evs = null;
+      evs = tick(now, target, dt, 6, true); lastFrameAt = performance.now();
       draw(st, { me: mine, looks }, names, evs);
       const left = Math.max(0, Math.ceil((SM.TIME - st.t) / SM.TPS));
       setHTML('smClock', `剩下 ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`);
@@ -11739,13 +11848,16 @@ function smPlay(o) {
     };
     const frameSafe = ts => { try { frame(ts); } catch (e) { console.warn('遊戲畫面出錯', e); window.__frameErr = (window.__frameErr || 0) + 1; if (!ended) raf = requestAnimationFrame(frameSafe); } };
     raf = requestAnimationFrame(frameSafe);
+    // 分頁在背景（縮小、切到別的分頁）時畫面不會更新，但模擬和送輸入要繼續，不然其他人會一直等
+    const stopBg = net ? bmBgTicker(() => { if (ended || !$('smwrap') || performance.now() - lastFrameAt < 200) return; try { const now = Date.now(); tick(now, Math.floor((now - startAt) / (1000 / SM.TPS)), .05, 60, false); } catch (e) { console.warn(e); } }) : () => {};
+    if (net) o.net.onKicked = () => { if (ended) return; toast('你的連線太久沒有回應，這一場先離開了', 4000); finish(true); };
     const cd = setInterval(() => {
       if (!$('smwrap')) { clearInterval(cd); return; }
       const s = Math.ceil((startAt - Date.now()) / 1000);
-      if (s > 0) { $('smCount').textContent = s; $('smCount').className = 'tbcount on'; beep(440, .08, 'square', .04); }
+      if (s > 0 && !peerStarted) { $('smCount').textContent = s; $('smCount').className = 'tbcount on'; beep(440, .08, 'square', .04); }
       else { clearInterval(cd); $('smCount').textContent = '開始！'; beep(880, .2, 'square', .05); setTimeout(() => { if ($('smCount')) $('smCount').className = 'tbcount'; }, 600); started = true; }
     }, 200);
-    const cleanup = () => { clearInterval(cd); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('blur', blur); };
+    const cleanup = () => { stopBg(); clearInterval(cd); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('blur', blur); };
     function finish(quit) {
       if (ended) return; ended = true; cleanup();
       if (net) o.net.finish(quit, cur + DELAY);
