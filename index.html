@@ -12137,7 +12137,8 @@ const XQ = {
   START: 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR',
   NAME: { K: '帥', A: '仕', B: '相', R: '俥', N: '傌', C: '炮', P: '兵', k: '將', a: '士', b: '象', r: '車', n: '馬', c: '砲', p: '卒' },
   VAL: { K: 0, A: 20, B: 20, R: 90, N: 40, C: 45, P: 10 },   // 電腦算分用（×10）
-  TIMES: [30, 45, 60], DRAW_QUIET: 120, MAXPLY: 400
+  TIMES: [30, 45, 60], DRAW_QUIET: 120, MAXPLY: 400,
+  LV: [{ depth: 1, q: 1, noise: 100, rnd: .2, ms: 300 }, { depth: 1, q: 2, noise: 40, rnd: .05, ms: 300 }, { depth: 4, q: 4, noise: 4, rnd: 0, ms: 900 }]
 };
 const xqRed = p => p >= 'A' && p <= 'Z';
 const xqSide = p => p === '.' ? -1 : xqRed(p) ? 0 : 1;
@@ -12278,7 +12279,7 @@ function xqOrder(b, ms) {
   return ms.map(m => [sc(m), m]).sort((a, z) => z[0] - a[0]).map(x => x[1]);
 }
 function xqCpu(st, level) {
-  const L = [{ depth: 1, q: 0, noise: 90, rnd: .22, ms: 300 }, { depth: 2, q: 3, noise: 25, rnd: 0, ms: 600 }, { depth: 4, q: 4, noise: 4, rnd: 0, ms: 900 }][level];
+  const L = typeof level === "object" ? level : XQ.LV[level];
   const b = st.b.slice(), s0 = st.turn, root = xqMoves(b, s0);
   if (!root.length) return null;
   if (Math.random() < L.rnd) return root[(Math.random() * root.length) | 0];
