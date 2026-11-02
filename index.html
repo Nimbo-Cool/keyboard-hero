@@ -12235,10 +12235,17 @@ function xqPlay(st, m) {
   st.b[t] = st.b[f]; st.b[f] = '.';
   st.turn = 1 - st.turn; st.ply++; st.quiet = cap === '.' ? st.quiet + 1 : 0;
   const check = xqInCheck(st.b, st.turn);
+  st.hist[st.hist.length - 1].chk = check;
   if (!xqMoves(st.b, st.turn).length) { st.over = 1 - st.turn; st.why = check ? 'mate' : 'stuck'; }   // 象棋「困斃」也算輸
   else {
-    const k = xqKey(st); let n = 1; for (const h of st.hist) if (h.key === k) n++;
-    if (n >= 3) { st.over = 2; st.why = 'repeat'; }
+    const k = xqKey(st); let n = 1, first = -1; st.hist.forEach((h, i) => { if (h.key === k) { n++; if (first < 0) first = i; } });
+    if (n >= 3) {
+      // 長將：重複的這一段裡，一方每一步都在將軍、另一方沒有 → 一直將軍的那一方輸；其他情況和棋
+      const all = [true, true], L = st.hist.length;
+      for (let i = first; i < L; i++) { const side = (L - 1 - i) % 2 === 0 ? 1 - st.turn : st.turn; if (!st.hist[i].chk) all[side] = false; }
+      if (all[0] !== all[1]) { st.over = all[0] ? 1 : 0; st.why = 'perpetual'; }
+      else { st.over = 2; st.why = 'repeat'; }
+    }
     else if (st.quiet >= XQ.DRAW_QUIET) { st.over = 2; st.why = 'quiet'; }
     else if (st.ply >= XQ.MAXPLY) { st.over = 2; st.why = 'long'; }
   }
@@ -12470,6 +12477,28 @@ function xqOpen() {
 }
 function xqOpenAgain() { UI.busy = false; world.active = false; $('ov').innerHTML = ''; xqOpen(); }
 
+// 小棋子（被吃掉的棋用）：只有字，看得清楚
+const xqMiniCache = {};
+function xqMini(p) {
+  if (xqMiniCache[p]) return xqMiniCache[p];
+  const c = document.createElement('canvas'); c.width = c.height = 52; const g = c.getContext('2d'), T = XQ_TEAM[xqSide(p)];
+  g.fillStyle = '#3a2414'; g.beginPath(); g.arc(26, 26, 25, 0, 7); g.fill();
+  g.fillStyle = '#f3dfb3'; g.beginPath(); g.arc(26, 26, 22, 0, 7); g.fill();
+  g.strokeStyle = T.ring; g.lineWidth = 3; g.beginPath(); g.arc(26, 26, 18, 0, 7); g.stroke();
+  g.fillStyle = T.ink; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 26px "Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif'; g.fillText(XQ.NAME[p], 26, 28);
+  return (xqMiniCache[p] = c.toDataURL());
+}
+// 每一方吃掉的棋（依價值由大到小排）
+function xqCaps(st, el) {
+  const caps = [[], []], ord = 'RCNBAPK';
+  st.hist.forEach(h => { if (h.cap !== '.') caps[xqRed(h.cap) ? 1 : 0].push(h.cap); });
+  for (let s = 0; s < 2; s++) {
+    const box = el(s); if (!box) continue;
+    const list = caps[s].sort((a, z) => ord.indexOf(a.toUpperCase()) - ord.indexOf(z.toUpperCase()));
+    box.innerHTML = list.length ? list.map(p => `<img src="${xqMini(p)}" alt="${XQ.NAME[p]}" title="${XQ.NAME[p]}">`).join('') : '<span>還沒有吃到棋子</span>';
+  }
+}
+
 // ---------- 一盤棋 ----------
 // o.mode 'cpu' | 'duo' | 'net'；net 時 o.side（0 紅 1 藍）、o.net（xqNet）、o.opName；o.tl 每步秒數
 function xqGame(o) {
@@ -12489,9 +12518,9 @@ function xqGame(o) {
     fit(); addEventListener('resize', fit);
     const msg = (t, ms = 1000) => { const m = $('xqMsg'); m.textContent = t; m.className = 'pvmsg on'; clearTimeout(m._t); if (ms) m._t = setTimeout(() => m.className = 'pvmsg', ms); };
     const icon = s => xqPieceImg(s ? 'k' : 'K', 18).toDataURL();
-    for (let s = 0; s < 2; s++) $('xqCard' + s).innerHTML = `<img src="${icon(s)}" alt=""><div class="xqn"><b style="color:${XQ_TEAM[s].ring}">${esc(names[s])}</b><span>${s ? '藍方・後走' : '紅方・先走'}</span>
-      <div class="xqbar"><i id="xqBar${s}"></i></div><em id="xqSec${s}"></em></div>`;
-    let ended = false, phase = 'wait', sel = null, dots = [], last = null, anim = null, checkAt = null, turnT = 0, thinking = false, raf = 0, warned = false;
+    for (let s = 0; s < 2; s++) $('xqCard' + s).innerHTML = `<div class="xqtop1"><img src="${icon(s)}" alt=""><div class="xqn"><b style="color:${XQ_TEAM[s].ring}">${esc(names[s])}</b><span>${s ? '藍方・後走' : '紅方・先走'}</span>
+      <div class="xqbar"><i id="xqBar${s}"></i></div><em id="xqSec${s}"></em></div></div><div class="xqcap" id="xqCap${s}"></div>`;
+    let capKey = -1, ended = false, phase = 'wait', sel = null, dots = [], last = null, anim = null, checkAt = null, turnT = 0, thinking = false, raf = 0, warned = false;
     const pend = {};
     const view = () => ({ b: st.b, flip, sel, dots, last, check: checkAt, anim });
     const status = () => {
@@ -12510,6 +12539,7 @@ function xqGame(o) {
         $('xqSec' + s).textContent = on ? (human(s) || net ? `${Math.ceil(left)} 秒` : '思考中') : '';
         $('xqCard' + s).classList.toggle('on', on);
       }
+      if (capKey !== st.hist.length) { capKey = st.hist.length; xqCaps(st, s => $('xqCap' + s)); }
       const u = $('xqUndo'); if (u) u.disabled = ended || phase !== 'play' || thinking || !!anim || st.hist.length < (duo ? 1 : 2) || !human(st.turn);
     };
     // ===== 走一步 =====
@@ -12602,7 +12632,7 @@ function xqGame(o) {
     function finish(why) {
       if (ended) return; ended = true; phase = 'end'; stopTick(); sel = null; dots = [];
       cv.removeEventListener('pointerdown', down); removeEventListener('resize', fit);
-      const RS = { mate: '將死', stuck: '沒有棋可以走（困斃）', repeat: '同樣的局面出現三次', quiet: '雙方很久都沒有吃子', long: '這盤棋下太久了' };
+      const RS = { perpetual: '一直將軍不停（長將）判輸', mate: '將死', stuck: '沒有棋可以走（困斃）', repeat: '同樣的局面出現三次', quiet: '雙方很久都沒有吃子', long: '這盤棋下太久了' };
       let win = null, title;
       if (why === 'quit') { win = null; title = '已離開'; }
       else if (why === 'leave') { win = true; title = '對手離開了，你贏了！'; }
@@ -12658,7 +12688,7 @@ function xqLearn() {
     { p: 'N', h: '傌（馬）：戰馬', t: '走「<b>日</b>」字（先直走一格，再斜走一格）。<br>前進方向緊貼著棋子就走不過去，叫做「拐馬腳」。', b: KK.concat([['N', 7, 4], ['P', 6, 4]]), at: 7 * 9 + 4 },
     { p: 'C', h: '炮（砲）：魔法砲台', t: '平常跟車一樣直線走；要<b>吃子</b>的時候，中間一定要<b>剛好隔一顆</b>棋子，跳過去吃！<br>試試看吃掉上面的藍色棋子。', b: KK.concat([['C', 7, 4], ['P', 5, 4], ['r', 2, 4]]), at: 7 * 9 + 4 },
     { p: 'P', h: '兵（卒）：小勇者', t: '<b>過河以前</b>只能往前走一格；<b>過河以後</b>也可以往左右走，但永遠<b>不能後退</b>。', b: KK.concat([['P', 6, 2], ['P', 3, 6]]), at: 3 * 9 + 6 },
-    { p: 'k', h: '將軍和勝負', t: '帥被對方攻擊叫「<b>將軍</b>」，一定要馬上解除。<br>解除不了就是「<b>將死</b>」，那一方就輸了！<br>還有：帥和將<b>不能在同一直線上面對面</b>。', b: [['k', 0, 3], ['R', 0, 8], ['R', 1, 0], ['K', 9, 4]], at: null }
+    { p: 'k', h: '將軍和勝負', t: '帥被對方攻擊叫「<b>將軍</b>」，一定要馬上解除。<br>解除不了就是「<b>將死</b>」，那一方就輸了！<br>還有：帥和將<b>不能在同一直線上面對面</b>；一直重複將軍不停（長將）會判輸。', b: [['k', 0, 3], ['R', 0, 8], ['R', 1, 0], ['K', 9, 4]], at: null }
   ];
   return new Promise(res => {
     let pg = 0, st = null, sel = null, dots = [], last = null, ended = false, raf = 0;
@@ -12705,10 +12735,12 @@ function xqLearn() {
   st.textContent = `
 .xqtl{display:flex;gap:8px;justify-content:center;align-items:center;font-weight:800;margin-top:6px}.xqtl .pbtn{width:84px}
 .xqrow{display:flex;gap:18px;align-items:center}
-.xqside{width:250px;display:flex;flex-direction:column;gap:12px;color:#fff}
-.xqcard{display:flex;gap:10px;align-items:center;background:#1d1530;border:3px solid #5a4a80;padding:8px 10px;height:86px;box-sizing:border-box}
+.xqside{width:260px;display:flex;flex-direction:column;gap:12px;color:#fff}
+.xqcard{display:flex;flex-direction:column;gap:6px;background:#1d1530;border:3px solid #5a4a80;padding:8px 10px;height:150px;box-sizing:border-box}
+.xqtop1{display:flex;gap:10px;align-items:center}
+.xqcap{height:56px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:2px;border-top:2px dashed #3a2f55;padding-top:4px}.xqcap img{width:26px;height:26px}.xqcap span{font-size:12px;color:#7a6a9a;line-height:26px}
 .xqcard.on{border-color:#ffd23f;box-shadow:0 0 14px rgba(255,210,63,.45)}
-.xqcard img{width:40px;height:40px;image-rendering:auto}
+.xqtop1 > img{width:40px;height:40px}
 .xqn{flex:1;min-width:0}.xqn b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.xqn span{font-size:12px;color:#b8a8d8}
 .xqbar{height:10px;background:#2a2238;border:2px solid #8a7ab0;margin-top:4px}.xqbar i{display:block;height:100%;width:100%}
 .xqn em{font-style:normal;font-size:13px;color:#ffe3a3;display:block;height:16px}
