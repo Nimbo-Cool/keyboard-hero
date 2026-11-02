@@ -8638,9 +8638,18 @@ function tbBoard(opts = {}) {
   };
   function topOut(retry) {
     S.deaths++; S.ev('ko'); S.retry = retry || null;   // K.O. 後從造成 K.O. 的那一顆重新開始
-    // 被 K.O.：拿掉所有垃圾行，自己排的全部保留往下沉
-    let keep = S.grid.filter(r => !r.some(c => c === 'G') && r.some(Boolean));
-    if (keep.length > TB.KO_KEEP) keep = keep.slice(keep.length - TB.KO_KEEP);  // 只是保險：出生的地方不能被擋住
+    // 被 K.O.：拿掉所有垃圾格，自己排的全部保留往下沉（不會把自己的方塊切一半）
+    let keep = S.grid.map(r => r.map(c => c === 'G' || c === 'B' ? null : c)).filter(r => r.some(Boolean));
+    // 太高的話上面要拿掉幾排，出生的地方才不會被擋住：碰到那幾排的方塊整顆拿掉，不留半截
+    if (keep.length > TB.KO_KEEP) {
+      const cut = keep.length - TB.KO_KEEP, stack = [];
+      for (let y = 0; y < cut; y++) for (let x = 0; x < TB.W; x++) if (keep[y][x]) stack.push([x, y, keep[y][x]]);
+      while (stack.length) {
+        const [x, y, k] = stack.pop(); if (keep[y][x] !== k) continue; keep[y][x] = null;
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const X = x + dx, Y = y + dy; if (X >= 0 && X < TB.W && Y >= 0 && Y < keep.length && keep[Y][X] === k) stack.push([X, Y, k]); });
+      }
+      keep = keep.slice(cut).filter(r => r.some(Boolean));
+    }
     S.grid = Array.from({ length: TB.H + TB.HID - keep.length }, () => Array(TB.W).fill(null)).concat(keep);
     S.pending = []; S.combo = -1; S.b2b = false; S.pause = 1.2; S.cur = null; S.held = false;
     return false;
