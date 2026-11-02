@@ -1579,6 +1579,7 @@ const PXDEF = {
   fourstar: ['...y...', '...y...', '..yyy..', 'yyyyyyy', '..yyy..', '...y...', '...y...'],
   pen: ['.......E', '......EE', '.....EE.', '....EE..', '...EE...', '..bb....', '.bb.....', 'k.......'],
   shoe: ['........', '........', '.bb.....', '.bbb....', '.bbbbb..', 'bbwbbbbb', 'kkkkkkkk', '........'],
+  xq: ['..NNNNNN..', '.NwwwwwwN.', 'NwwRRRRwwN', 'NwRwwwwRwN', 'NwRwrrwRwN', 'NwRwrrwRwN', 'NwRwwwwRwN', 'NwwRRRRwwN', '.NwwwwwwN.', '..NNNNNN..'],
   sling: ['nn......nn', 'nN......Nn', 'nNr....rNn', '.nNr..rNn.', '..nNrrNn..', '...nNNn...', '....nN....', '....nN....', '....nN....', '....NN....'],
   vball: ['...kkkk...', '.kkwwyykk.', '.kwwwyyyk.', 'kbwwwwyyyk', 'kbbwwwwwyk', 'kwbbwwwwwk', 'kwwbbbwwwk', '.kwwwbbbk.', '.kkwwwwkk.', '...kkkk...'],
   brick: ['rrrrkrrrrr', 'rRRRkrRRRR', 'kkkkkkkkkk', 'rrkrrrrkrr', 'RRkrRRRkrR', 'kkkkkkkkkk', 'rrrrkrrrrr', 'rRRRkrRRRR'],
@@ -1637,7 +1638,7 @@ const PXVAR = {
 };
 // emoji → 圖（emoji 不含 FE0F）
 const PXMAP = {
-  '\uE100': 'sling', '👟': 'shoe', '🥾': 'shoe', '🏐': 'vball', '🧱': 'brick', '🐉': 'dragon', '🐲': 'dragon', '🐇': 'rabbit', '↩': 'back', '🔙': 'back',
+  '\uE100': 'sling', '\uE101': 'xq', '👟': 'shoe', '🥾': 'shoe', '🏐': 'vball', '🧱': 'brick', '🐉': 'dragon', '🐲': 'dragon', '🐇': 'rabbit', '↩': 'back', '🔙': 'back',
   '🏁': 'flag', '⭐': 'star', '🌟': 'star', '★': 'star', '🎯': 'target', '🎨': 'palette', '✨': 'sparkle', '💫': 'sparkle', '⌨': 'keyboard', '✅': 'check', '✔': 'check',
   '🎉': 'party', '🔑': 'key', '🗝': 'key', '🎵': 'note', '🎶': 'note', '🌿': 'herb', '🍀': 'herb', '🎬': 'clapper', '📦': 'box', '🏅': 'medal', '🎖': 'medal',
   '🖱': 'mouse', '🛡': 'shield', '🎁': 'gift', '🐱': 'cat', '😺': 'cat', '💡': 'bulb', '🏫': 'school', '☁': 'cloud', '📚': 'books', '🖼': 'picture', '📜': 'scroll',
@@ -4639,24 +4640,26 @@ async function talkGeneric(id) {
   if (N.arena) {
     if (me.quest < qIdx(N.arena.after)) {
       if (typeof tbOpen !== 'function') return dialog([[id, N.arena.locked]]);
-      const v = await choose(id, `${N.arena.locked}不過「鍵帽拼拼樂」「像素排球」「彈弓對決」「泡泡對戰」「寶石炸彈陣」「勇者擂台」現在就可以玩！`, [{ t: '⌨️ 鍵帽拼拼樂', v: '__tb' }, { t: '🏐 像素排球', v: '__pv' }, { t: '\uE100 彈弓對決', v: '__sg' }, { t: '🫧 泡泡對戰', v: '__bb' }, { t: '💎 寶石炸彈陣', v: '__bm' }, { t: '⚔️ 勇者擂台', v: '__sm' }].concat(BOARD_OPT(), [{ t: '下次再說', v: null }]));
+      const v = await choose(id, `${N.arena.locked}不過「鍵帽拼拼樂」「像素排球」「彈弓對決」「泡泡對戰」「寶石炸彈陣」「勇者擂台」「魔棋爭先」現在就可以玩！`, [{ t: '⌨️ 鍵帽拼拼樂', v: '__tb' }, { t: '🏐 像素排球', v: '__pv' }, { t: '\uE100 彈弓對決', v: '__sg' }, { t: '🫧 泡泡對戰', v: '__bb' }, { t: '💎 寶石炸彈陣', v: '__bm' }, { t: '⚔️ 勇者擂台', v: '__sm' }, { t: '\uE101 魔棋爭先', v: '__xq' }].concat(BOARD_OPT(), [{ t: '下次再說', v: null }]));
       if (v === '__tb') setTimeout(() => tbOpen(), 30);
       if (v === '__pv') setTimeout(() => pvOpen(), 30);
       if (v === '__sg') setTimeout(() => sgOpen(), 30);
       if (v === '__bb') setTimeout(() => bbOpen(), 30);
       if (v === '__bm') setTimeout(() => bmOpen(), 30);
       if (v === '__sm') setTimeout(() => smOpen(), 30);
+      if (v === '__xq') setTimeout(() => xqOpen(), 30);
       if (v === '__board') setTimeout(() => classBoard(), 30);
       return;
     }
     const rec = N.arena.list.map(o => { const D = MINIS[o.mini]; return D.practice ? `${D.title} ${me.best[D.practice] || 0}${D.unit}` : ''; }).filter(Boolean).join('、');
-    const v = await choose(id, `歡迎來到競技場！你的紀錄：${rec}`, N.arena.list.map(o => ({ t: o.t, v: o.mini })).concat(typeof tbOpen === 'function' ? [{ t: '⌨️ 鍵帽拼拼樂', v: '__tb' }, { t: '🏐 像素排球', v: '__pv' }, { t: '\uE100 彈弓對決', v: '__sg' }, { t: '🫧 泡泡對戰', v: '__bb' }, { t: '💎 寶石炸彈陣', v: '__bm' }, { t: '⚔️ 勇者擂台', v: '__sm' }] : [], BOARD_OPT(), [{ t: '下次再說', v: null }]));
+    const v = await choose(id, `歡迎來到競技場！你的紀錄：${rec}`, N.arena.list.map(o => ({ t: o.t, v: o.mini })).concat(typeof tbOpen === 'function' ? [{ t: '⌨️ 鍵帽拼拼樂', v: '__tb' }, { t: '🏐 像素排球', v: '__pv' }, { t: '\uE100 彈弓對決', v: '__sg' }, { t: '🫧 泡泡對戰', v: '__bb' }, { t: '💎 寶石炸彈陣', v: '__bm' }, { t: '⚔️ 勇者擂台', v: '__sm' }, { t: '\uE101 魔棋爭先', v: '__xq' }] : [], BOARD_OPT(), [{ t: '下次再說', v: null }]));
     if (v === '__tb') { setTimeout(() => tbOpen(), 30); return; }
     if (v === '__pv') { setTimeout(() => pvOpen(), 30); return; }
     if (v === '__sg') { setTimeout(() => sgOpen(), 30); return; }
     if (v === '__bb') { setTimeout(() => bbOpen(), 30); return; }
     if (v === '__bm') { setTimeout(() => bmOpen(), 30); return; }
     if (v === '__sm') { setTimeout(() => smOpen(), 30); return; }
+    if (v === '__xq') { setTimeout(() => xqOpen(), 30); return; }
     if (v === '__board') { setTimeout(() => classBoard(), 30); return; }
     if (v) return practice(v, id);
     return;
@@ -12121,6 +12124,603 @@ const smRoom = {
 .smhp{height:14px;border:2px solid #2b1d14;background:#5a4a3a;margin:2px 0}.smhp i{display:block;height:100%;transition:width .15s}
 .smst{font-size:14px;color:#e04f3f;display:flex;justify-content:space-between;min-height:18px}.smko{color:#3a2a1a;font-weight:800;font-size:12px}
 .smmenu{max-width:760px}.smpick{margin:6px 0;font-weight:800}.smweap{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:center}.smweap .pbtn{min-width:84px}.smwtip{margin:4px 0;min-height:1.3em}`;
+  document.head.appendChild(st);
+})();
+// =====================================================================
+//  魔棋爭先：象棋（規則是傳統公共領域；棋子造型、畫面、電腦對手都是鍵盤勇者原創）
+//  ‧棋子上保留正統的字，旁邊畫奇幻像素小角色
+//  ‧跟電腦下（三級）、同一台電腦兩人輪流、連線開房
+//  ‧每步思考時間 30／45／60 秒，時間到電腦幫忙走一步（不直接判輸）
+//  ‧盤面用 90 格陣列：第 r 列第 c 行＝r*9+c，紅方在下面（第 5～9 列），紅方先走
+// =====================================================================
+const XQ = {
+  START: 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR',
+  NAME: { K: '帥', A: '仕', B: '相', R: '俥', N: '傌', C: '炮', P: '兵', k: '將', a: '士', b: '象', r: '車', n: '馬', c: '砲', p: '卒' },
+  VAL: { K: 0, A: 20, B: 20, R: 90, N: 40, C: 45, P: 10 },   // 電腦算分用（×10）
+  TIMES: [30, 45, 60], DRAW_QUIET: 120, MAXPLY: 400
+};
+const xqRed = p => p >= 'A' && p <= 'Z';
+const xqSide = p => p === '.' ? -1 : xqRed(p) ? 0 : 1;
+function xqParse(fen) {
+  const b = [];
+  fen.split('/').forEach(row => { for (const ch of row) { if (ch >= '1' && ch <= '9') for (let i = 0; i < +ch; i++) b.push('.'); else b.push(ch); } });
+  return b;
+}
+function xqNew(fen) { return { b: xqParse(fen || XQ.START), turn: 0, ply: 0, quiet: 0, hist: [], over: -1, why: '' }; }
+const xqKey = st => st.b.join('') + st.turn;
+const inPalace = (r, c, s) => c >= 3 && c <= 5 && (s === 0 ? r >= 7 : r <= 2);
+// 某一顆棋子的「走法」（還沒檢查會不會讓自己的帥被吃）
+function xqPseudo(b, i, out) {
+  const p = b[i]; if (p === '.') return out;
+  const s = xqSide(p), r = (i / 9) | 0, c = i % 9, t = p.toUpperCase();
+  const add = (rr, cc) => { if (rr < 0 || rr > 9 || cc < 0 || cc > 8) return false; const j = rr * 9 + cc, q = b[j]; if (q === '.' || xqSide(q) !== s) out.push(i * 100 + j); return q === '.'; };
+  if (t === 'K') { [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dr, dc]) => { if (inPalace(r + dr, c + dc, s)) add(r + dr, c + dc); }); }
+  else if (t === 'A') { [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([dr, dc]) => { if (inPalace(r + dr, c + dc, s)) add(r + dr, c + dc); }); }
+  else if (t === 'B') {
+    [[2, 2], [2, -2], [-2, 2], [-2, -2]].forEach(([dr, dc]) => {
+      const rr = r + dr, cc = c + dc; if (rr < 0 || rr > 9 || cc < 0 || cc > 8) return;
+      if (s === 0 ? rr < 5 : rr > 4) return;   // 不能過河
+      if (b[(r + dr / 2) * 9 + c + dc / 2] !== '.') return;   // 塞象眼
+      add(rr, cc);
+    });
+  } else if (t === 'N') {
+    [[2, 1, 1, 0], [2, -1, 1, 0], [-2, 1, -1, 0], [-2, -1, -1, 0], [1, 2, 0, 1], [-1, 2, 0, 1], [1, -2, 0, -1], [-1, -2, 0, -1]].forEach(([dr, dc, lr, lc]) => {
+      const rr = r + dr, cc = c + dc; if (rr < 0 || rr > 9 || cc < 0 || cc > 8) return;
+      if (b[(r + lr) * 9 + c + lc] !== '.') return;   // 拐馬腳
+      add(rr, cc);
+    });
+  } else if (t === 'R') {
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dr, dc]) => { let rr = r + dr, cc = c + dc; while (rr >= 0 && rr <= 9 && cc >= 0 && cc <= 8) { if (!add(rr, cc)) break; rr += dr; cc += dc; } });
+  } else if (t === 'C') {
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dr, dc]) => {
+      let rr = r + dr, cc = c + dc, jumped = false;
+      while (rr >= 0 && rr <= 9 && cc >= 0 && cc <= 8) {
+        const q = b[rr * 9 + cc];
+        if (!jumped) { if (q === '.') out.push(i * 100 + rr * 9 + cc); else jumped = true; }
+        else if (q !== '.') { if (xqSide(q) !== s) out.push(i * 100 + rr * 9 + cc); break; }
+        rr += dr; cc += dc;
+      }
+    });
+  } else if (t === 'P') {
+    const f = s === 0 ? -1 : 1; add(r + f, c);
+    if (s === 0 ? r <= 4 : r >= 5) { add(r, c - 1); add(r, c + 1); }   // 過河以後可以橫走
+  }
+  return out;
+}
+// 第 k 格有沒有被 by 這一方攻擊（含「帥將不能照面」）
+function xqAttacked(b, k, by) {
+  const r = (k / 9) | 0, c = k % 9, en = by === 0 ? 'KRNCP' : 'krncp';
+  const [K, R, N, C, P] = en;
+  for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    let rr = r + dr, cc = c + dc, n = 0;
+    while (rr >= 0 && rr <= 9 && cc >= 0 && cc <= 8) {
+      const q = b[rr * 9 + cc];
+      if (q !== '.') {
+        if (n === 0 && (q === R || (q === K && dc === 0))) return true;   // 車；帥將照面（同一行中間沒有棋子）
+        if (n === 1 && q === C) return true;
+        n++; if (n > 1) break;
+      }
+      rr += dr; cc += dc;
+    }
+  }
+  // 馬：從被攻擊的格子反過來看，馬腳在「馬」的旁邊
+  for (const [dr, dc] of [[2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2]]) {
+    const rr = r + dr, cc = c + dc; if (rr < 0 || rr > 9 || cc < 0 || cc > 8 || b[rr * 9 + cc] !== N) continue;
+    const lr = Math.abs(dr) === 2 ? rr - Math.sign(dr) : rr, lc = Math.abs(dc) === 2 ? cc - Math.sign(dc) : cc;
+    if (b[lr * 9 + lc] === '.') return true;
+  }
+  // 兵：紅兵往上走，所以紅兵在被攻擊格子的下面一格（或過河後在左右）
+  const f = by === 0 ? 1 : -1;
+  if (r + f >= 0 && r + f <= 9 && b[(r + f) * 9 + c] === P) return true;
+  for (const dc of [-1, 1]) { const cc = c + dc; if (cc < 0 || cc > 8 || b[r * 9 + cc] !== P) continue; if (by === 0 ? r <= 4 : r >= 5) return true; }
+  return false;
+}
+const xqKing = (b, s) => b.indexOf(s === 0 ? 'K' : 'k');
+function xqInCheck(b, s) { const k = xqKing(b, s); return k < 0 || xqAttacked(b, k, 1 - s); }
+// 合法走法：走完以後自己的帥不能被吃
+function xqMoves(b, s, from) {
+  const ps = [];
+  if (from != null) xqPseudo(b, from, ps); else for (let i = 0; i < 90; i++) if (xqSide(b[i]) === s) xqPseudo(b, i, ps);
+  const out = [];
+  for (const m of ps) { const f = (m / 100) | 0, t = m % 100, cap = b[t]; b[t] = b[f]; b[f] = '.'; if (!xqInCheck(b, s)) out.push(m); b[f] = b[t]; b[t] = cap; }
+  return out;
+}
+// 走一步（會檢查合法）；回傳 { cap, check } 或 null
+function xqPlay(st, m) {
+  if (st.over >= 0) return null;
+  const f = (m / 100) | 0, t = m % 100;
+  if (xqSide(st.b[f]) !== st.turn || !xqMoves(st.b, st.turn, f).includes(m)) return null;
+  const cap = st.b[t];
+  st.hist.push({ m, cap, quiet: st.quiet, key: xqKey(st) });
+  st.b[t] = st.b[f]; st.b[f] = '.';
+  st.turn = 1 - st.turn; st.ply++; st.quiet = cap === '.' ? st.quiet + 1 : 0;
+  const check = xqInCheck(st.b, st.turn);
+  if (!xqMoves(st.b, st.turn).length) { st.over = 1 - st.turn; st.why = check ? 'mate' : 'stuck'; }   // 象棋「困斃」也算輸
+  else {
+    const k = xqKey(st); let n = 1; for (const h of st.hist) if (h.key === k) n++;
+    if (n >= 3) { st.over = 2; st.why = 'repeat'; }
+    else if (st.quiet >= XQ.DRAW_QUIET) { st.over = 2; st.why = 'quiet'; }
+    else if (st.ply >= XQ.MAXPLY) { st.over = 2; st.why = 'long'; }
+  }
+  return { cap, check };
+}
+function xqUndo(st) {
+  const h = st.hist.pop(); if (!h) return false;
+  const f = (h.m / 100) | 0, t = h.m % 100;
+  st.b[f] = st.b[t]; st.b[t] = h.cap; st.turn = 1 - st.turn; st.ply--; st.quiet = h.quiet; st.over = -1; st.why = '';
+  return true;
+}
+
+// ---------- 電腦 ----------
+// 位置加分：兵過河越深越好、馬和炮喜歡中間、車喜歡開闊
+function xqPos(p, i) {
+  const t = p.toUpperCase(), s = xqRed(p) ? 0 : 1, r = (i / 9) | 0, c = i % 9, fr = s === 0 ? r : 9 - r, mid = 4 - Math.abs(c - 4);
+  if (t === 'P') return fr <= 4 ? 10 + (4 - fr) * 3 + mid * 2 - (fr === 0 ? 8 : 0) : 0;
+  if (t === 'N') return mid * 2 + (fr <= 6 ? 4 : 0) - (fr === 9 ? 6 : 0);
+  if (t === 'C') return mid + (fr === 7 ? 2 : 0);
+  if (t === 'R') return (fr <= 6 ? 4 : 0) + mid;
+  return 0;
+}
+function xqEval(b, s) {
+  let v = 0;
+  for (let i = 0; i < 90; i++) { const p = b[i]; if (p === '.') continue; const w = XQ.VAL[p.toUpperCase()] * 10 + xqPos(p, i); v += xqRed(p) ? w : -w; }
+  return s === 0 ? v : -v;
+}
+function xqOrder(b, ms) {
+  const sc = m => { const q = b[m % 100]; return q === '.' ? 0 : 1000 + XQ.VAL[q.toUpperCase()] * 10 - XQ.VAL[b[(m / 100) | 0].toUpperCase()]; };
+  return ms.map(m => [sc(m), m]).sort((a, z) => z[0] - a[0]).map(x => x[1]);
+}
+function xqCpu(st, level) {
+  const L = [{ depth: 1, q: 0, noise: 90, rnd: .22, ms: 300 }, { depth: 2, q: 3, noise: 25, rnd: 0, ms: 600 }, { depth: 4, q: 4, noise: 4, rnd: 0, ms: 900 }][level];
+  const b = st.b.slice(), s0 = st.turn, root = xqMoves(b, s0);
+  if (!root.length) return null;
+  if (Math.random() < L.rnd) return root[(Math.random() * root.length) | 0];
+  const t0 = performance.now(), MATE = 100000; let stop = false, nodes = 0;
+  const qs = (s, a, z, d) => {
+    const stand = xqEval(b, s); if (stand >= z) return stand; if (stand > a) a = stand;
+    if (d <= 0) return a;
+    for (const m of xqOrder(b, xqMoves(b, s))) {
+      const f = (m / 100) | 0, t = m % 100, cap = b[t]; if (cap === '.') continue;
+      b[t] = b[f]; b[f] = '.'; const v = -qs(1 - s, -z, -a, d - 1); b[f] = b[t]; b[t] = cap;
+      if (v >= z) return v; if (v > a) a = v;
+    }
+    return a;
+  };
+  const ab = (s, d, a, z, ply) => {
+    if ((++nodes & 1023) === 0 && performance.now() - t0 > L.ms * 1.6) stop = true;
+    if (stop) return 0;
+    const ms = xqMoves(b, s);
+    if (!ms.length) return -MATE + ply;
+    if (d <= 0) return L.q ? qs(s, a, z, L.q) : xqEval(b, s);
+    let best = -MATE * 2;
+    for (const m of xqOrder(b, ms)) {
+      const f = (m / 100) | 0, t = m % 100, cap = b[t];
+      b[t] = b[f]; b[f] = '.'; const v = -ab(1 - s, d - 1, -z, -a, ply + 1); b[f] = b[t]; b[t] = cap;
+      if (v > best) best = v; if (v > a) a = v; if (a >= z) break;
+    }
+    return best;
+  };
+  let order = xqOrder(b, root), pick = order[0];
+  for (let d = 1; d <= L.depth; d++) {
+    const scored = [];
+    for (const m of order) {
+      const f = (m / 100) | 0, t = m % 100, cap = b[t];
+      b[t] = b[f]; b[f] = '.'; const v = -ab(1 - s0, d - 1, -MATE * 2, MATE * 2, 1); b[f] = b[t]; b[t] = cap;
+      if (stop) break;
+      scored.push([v + (Math.random() * 2 - 1) * L.noise, m, v]);
+    }
+    if (stop && scored.length < order.length) { if (scored.length && d > 1) { scored.sort((x, y) => y[0] - x[0]); if (scored[0][2] > -MATE / 2) pick = scored[0][1]; } break; }
+    scored.sort((x, y) => y[0] - x[0]); pick = scored[0][1];
+    order = scored.map(x => x[1]);
+    if (scored[0][2] > MATE / 2 || performance.now() - t0 > L.ms) break;   // 找到殺棋或時間到
+  }
+  return pick;
+}
+// 時間到：幫忙走一步（用新手電腦的眼光挑一步不太差的）
+const xqAuto = st => xqCpu(st, 1);
+// 電腦在背景想（Worker），畫面和計時不會卡住；不支援就直接在這裡想
+const xqBrain = {
+  w: null, id: 0, cb: {},
+  init() {
+    if (this.w || this.w === false) return;
+    try {
+      const src = `const XQ=${JSON.stringify(XQ)};const xqRed=${xqRed};const xqSide=${xqSide};const inPalace=${inPalace};const xqKing=${xqKing};
+${xqPseudo}\n${xqAttacked}\n${xqInCheck}\n${xqMoves}\n${xqPos}\n${xqEval}\n${xqOrder}\n${xqCpu}
+onmessage=e=>{const d=e.data;let m=null;try{m=xqCpu({b:d.b,turn:d.turn},d.level);}catch(er){}postMessage({id:d.id,m});};`;
+      this.w = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+      this.w.onmessage = e => { const f = this.cb[e.data.id]; delete this.cb[e.data.id]; f && f(e.data.m); };
+      this.w.onerror = () => { this.w = false; };
+    } catch (e) { this.w = false; }
+  },
+  think(st, level) {
+    this.init();
+    return new Promise(res => {
+      const local = () => res(xqCpu(st, level));
+      if (!this.w) return setTimeout(local, 0);
+      const id = ++this.id; let done = false;
+      this.cb[id] = m => { if (!done) { done = true; res(m != null ? m : xqCpu(st, level)); } };
+      setTimeout(() => { if (!done) { done = true; delete this.cb[id]; local(); } }, 6000);   // Worker 沒回應就自己想
+      try { this.w.postMessage({ id, b: st.b.slice(), turn: st.turn, level }); } catch (e) { done = true; local(); }
+    });
+  }
+};
+
+// ---------- 像素棋子 ----------
+const XQ_SPR = {
+  K: ['..y..y..y..', '..yyyyyyy..', '..yyymyyy..', '..sssssss..', '..sksssks..', '..sssssss..', '.mmmmmmmmm.', 'mmmmyyymmmm', '.mmmmmmmmm.', '..dd...dd..'],
+  k: ['.h.......h.', '.hh.....hh.', '..hmmmmmh..', '..mmmmmmm..', '..mymmmym..', '..mmwmwmm..', '.ddddddddd.', 'dddmmymmddd', '.ddddddddd.', '..dd...dd..'],
+  A: ['....ggg....', '...ggggg...', '..ggggggg..', '..gkkkkkg..', '..ggggggg..', '..mmmmmmm..', '.gmmmmmmmg.', '.gmmyyymmg.', '..mmmmmmm..', '..dd...dd..'],
+  B: ['.....m.....', '....mmm....', '...mmymm...', '..mmmmmmm..', '.ddddddddd.', '..sssssss..', '..sksssks..', '..sssssss..', '..mmmmmmm..', '.mmmmmmmmm.'],
+  R: ['...ggggg...', '..gmmmmmg..', '.gmmyyymmg.', 'kmmmmmmmmmk', '.ddddddddd.', '.BBB...BBB.', 'BBgBB.BBgBB', '.BBB...BBB.'],
+  N: ['...m.......', '..bbm......', '.bbbbmm....', 'bkbbbbmm...', 'bbbbbbbmm..', 'bb..bbbbmm.', '....bbbbbb.', '...mmmmmmm.', '...mdddddm.', '...b.b.b.b.'],
+  C: ['........y..', '.......yyy.', '........y..', '.....ggG...', '....ggG....', '...ggG.....', '.mmmmmm....', 'mmmyymmm...', 'mmmmmmmm...', '.BB..BB....'],
+  P: ['...ggggg...', '..ggggggg..', '..sssssss..', '..sksssks..', '..sssssss..', '...mmmmm.w.', '..mmmmmmmw.', '..mmmymmmw.', '..mmmmmmm..', '...d...d...']
+};
+const XQ_TEAM = [{ m: '#e04f3f', d: '#9c2a22', ink: '#b8261c', ring: '#d8483a' }, { m: '#3a6fd8', d: '#24468c', ink: '#1f3f86', ring: '#3a6fd8' }];
+const XQ_PAL = { y: '#ffd23f', s: '#f5c99b', k: '#1a1020', w: '#ffffff', g: '#9aa6b2', G: '#5a6470', b: '#a0682e', B: '#6a4020', h: '#efe6d2' };
+const xqPieceCache = {};
+function xqPieceImg(p, R) {
+  const key = p + R; if (xqPieceCache[key]) return xqPieceCache[key];
+  const s = xqSide(p), T = XQ_TEAM[s], c = document.createElement('canvas'), D = R * 2 + 4; c.width = c.height = D;
+  const g = c.getContext('2d'), o = D / 2;
+  g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.arc(o + 1, o + 2, R, 0, 7); g.fill();
+  g.fillStyle = '#3a2414'; g.beginPath(); g.arc(o, o, R, 0, 7); g.fill();
+  g.fillStyle = '#f3dfb3'; g.beginPath(); g.arc(o, o, R - 2, 0, 7); g.fill();
+  g.strokeStyle = T.ring; g.lineWidth = 2; g.beginPath(); g.arc(o, o, R - 5, 0, 7); g.stroke();
+  const spr = XQ_SPR[p === 'k' ? 'k' : p.toUpperCase()], u = Math.max(1, Math.round(R / 13)), sw = 11 * u, sh = spr.length * u;
+  const sx = Math.round(o - sw / 2), sy = Math.round(o - R * .84);
+  spr.forEach((row, y) => { for (let x = 0; x < row.length; x++) { const ch = row[x]; if (ch === '.') continue; g.fillStyle = ch === 'm' ? T.m : ch === 'd' ? T.d : XQ_PAL[ch]; g.fillRect(sx + x * u, sy + y * u, u, u); } });
+  g.fillStyle = T.ink; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = `900 ${Math.round(R * .62)}px "Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif`;
+  g.fillText(XQ.NAME[p], o, o + R * .5);
+  return (xqPieceCache[key] = c);
+}
+
+// ---------- 棋盤 ----------
+const XQB = { S: 56, M: 36 };
+XQB.W = XQB.S * 8 + XQB.M * 2; XQB.H = XQB.S * 9 + XQB.M * 2;
+function xqBoardBg() {
+  if (xqBoardBg.c) return xqBoardBg.c;
+  const { S, M, W, H } = XQB, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#e2b877'; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 160; i++) { g.fillStyle = i % 2 ? '#d8ab68' : '#eac285'; g.fillRect((i * 97) % W, (i * 61) % H, 18 + (i % 5) * 6, 2); }
+  // 河
+  const ry = M + S * 4;
+  g.fillStyle = '#7cc0e4'; g.fillRect(M, ry + 2, S * 8, S - 4);
+  g.fillStyle = '#a8dcf2'; for (let x = M + 6; x < M + S * 8 - 10; x += 22) { g.fillRect(x, ry + 14 + ((x / 22) % 2) * 18, 10, 3); }
+  g.strokeStyle = '#5a3a1a'; g.lineWidth = 2;
+  const L = (x1, y1, x2, y2) => { g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+  for (let r = 0; r < 10; r++) L(M, M + r * S, M + S * 8, M + r * S);
+  for (let c2 = 0; c2 < 9; c2++) { if (c2 === 0 || c2 === 8) L(M + c2 * S, M, M + c2 * S, M + S * 9); else { L(M + c2 * S, M, M + c2 * S, M + S * 4); L(M + c2 * S, M + S * 5, M + c2 * S, M + S * 9); } }
+  L(M + 3 * S, M, M + 5 * S, M + 2 * S); L(M + 5 * S, M, M + 3 * S, M + 2 * S);
+  L(M + 3 * S, M + 7 * S, M + 5 * S, M + 9 * S); L(M + 5 * S, M + 7 * S, M + 3 * S, M + 9 * S);
+  g.lineWidth = 4; g.strokeRect(M - 6, M - 6, S * 8 + 12, S * 9 + 12);
+  g.fillStyle = '#2f5f88'; g.font = '900 26px "Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('楚　河', M + S * 2, ry + S / 2); g.fillText('漢　界', M + S * 6, ry + S / 2);
+  return (xqBoardBg.c = c);
+}
+// 畫整個盤面：v = { b, flip, sel, dots, last, check, anim:{from,to,p,k} }
+function xqDraw(g, v) {
+  const { S, M } = XQB, pos = i => { let r = (i / 9) | 0, c = i % 9; if (v.flip) { r = 9 - r; c = 8 - c; } return [M + c * S, M + r * S]; };
+  g.drawImage(xqBoardBg(), 0, 0);
+  const corner = (i, col) => { const [x, y] = pos(i), d = S / 2 - 3, l = 9; g.fillStyle = col;
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => { g.fillRect(x + sx * d - (sx > 0 ? 3 : 0), y + sy * d - (sy > 0 ? l : 0), 3, l); g.fillRect(x + sx * d - (sx > 0 ? l : 0), y + sy * d - (sy > 0 ? 3 : 0), l, 3); }); };
+  if (v.last) { corner((v.last / 100) | 0, 'rgba(60,40,20,.55)'); corner(v.last % 100, '#c43e1c'); }
+  const R = 25;
+  for (let i = 0; i < 90; i++) {
+    const p = v.b[i]; if (p === '.' || (v.anim && i === v.anim.to)) continue;
+    const [x, y] = pos(i), img = xqPieceImg(p, R);
+    if (v.check != null && i === v.check) { g.fillStyle = `rgba(255,60,40,${.45 + Math.sin(performance.now() / 120) * .25})`; g.beginPath(); g.arc(x, y, R + 6, 0, 7); g.fill(); }
+    g.drawImage(img, x - img.width / 2, y - img.height / 2 - (v.sel === i ? 4 : 0));
+  }
+  if (v.sel != null) corner(v.sel, '#ffd23f');
+  (v.dots || []).forEach(m => { const t = m % 100, [x, y] = pos(t);
+    if (v.b[t] !== '.') { g.strokeStyle = '#ffd23f'; g.lineWidth = 4; g.beginPath(); g.arc(x, y, R + 2, 0, 7); g.stroke(); }
+    else { g.fillStyle = '#1a1020'; g.fillRect(x - 7, y - 7, 14, 14); g.fillStyle = '#6abe30'; g.fillRect(x - 5, y - 5, 10, 10); } });
+  if (v.anim) {
+    const [x0, y0] = pos(v.anim.from), [x1, y1] = pos(v.anim.to), k = Math.min(1, v.anim.k), e = 1 - (1 - k) * (1 - k), img = xqPieceImg(v.anim.p, R);
+    g.drawImage(img, x0 + (x1 - x0) * e - img.width / 2, y0 + (y1 - y0) * e - img.height / 2 - Math.sin(k * Math.PI) * 10);
+  }
+}
+const xqHit = (cv, e, flip) => {
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * XQB.W / r.width, y = (e.clientY - r.top) * XQB.H / r.height;
+  let c = Math.round((x - XQB.M) / XQB.S), rr = Math.round((y - XQB.M) / XQB.S);
+  if (c < 0 || c > 8 || rr < 0 || rr > 9) return -1;
+  if (Math.hypot(x - XQB.M - c * XQB.S, y - XQB.M - rr * XQB.S) > XQB.S * .48) return -1;
+  if (flip) { c = 8 - c; rr = 9 - rr; }
+  return rr * 9 + c;
+};
+const xqClick = () => beep(520, .04, 'square', .03);
+const xqThud = cap => { beep(cap ? 170 : 240, .07, 'triangle', .07); if (cap) beep(110, .12, 'sawtooth', .04, .03, -40); };
+
+// ---------- 主選單 ----------
+function xqOpen() {
+  if (!me || (typeof B !== 'undefined' && B.st) || UI.busy) return;
+  if (typeof tbAllowed === 'function' && !tbAllowed()) return toast('老師目前沒有開放對戰遊戲喔！');
+  world.active = false; UI.busy = true;
+  const online = typeof netRoom !== 'undefined' && typeof tbNet !== 'undefined' && tbNet.ready();
+  let tl = LS.get('kr_xqT', 45); if (!XQ.TIMES.includes(tl)) tl = 45;
+  $('ov').innerHTML = `<div class="tbmenu px"><h2> 魔棋爭先</h2>
+    <p class="tbsub">點一下自己的棋子，再點<b>亮起來的位置</b>就能走。<br>把對方的「帥／將」逼到<b>無路可走</b>就贏了！</p>
+    <div class="xqtl">每步思考時間 ${XQ.TIMES.map(t => `<button class="pbtn small ${t === tl ? 'green' : 'gray'}" data-t="${t}">${t} 秒</button>`).join('')}</div>
+    <div class="tbbtns" id="xqBtns">
+      ${online ? `<button class="pbtn green big" id="xqCreate">🏠 開房間</button><button class="pbtn blue big" id="xqJoin">🔑 輸入房號加入</button>` : ''}
+      <button class="pbtn big" id="xqCpu">🤖 跟電腦下</button>
+      <button class="pbtn big" id="xqDuo">⚔️ 兩人輪流下（同一台電腦）</button>
+      <button class="pbtn blue big" id="xqLearn">📖 新手教學</button>
+      <button class="pbtn gray" id="xqBack">↩ 回到冒險</button></div>
+    ${online ? '' : '<p class="tbsub">開房間連線對戰要在連線版才能玩。</p>'}</div>`;
+  document.querySelectorAll('.xqtl [data-t]').forEach(b => b.onclick = () => { tl = +b.dataset.t; LS.set('kr_xqT', tl); document.querySelectorAll('.xqtl [data-t]').forEach(x => x.className = 'pbtn small ' + (+x.dataset.t === tl ? 'green' : 'gray')); xqClick(); });
+  $('xqBack').onclick = () => { $('ov').innerHTML = ''; UI.busy = false; world.active = true; updateHUD(); };
+  $('xqLearn').onclick = () => xqLearn().then(r => r === 'cpu' ? xqGame({ mode: 'cpu', level: 0, tl }).then(xqOpenAgain) : xqOpenAgain());
+  $('xqDuo').onclick = () => xqGame({ mode: 'duo', tl }).then(xqOpenAgain);
+  $('xqCpu').onclick = () => {
+    $('xqBtns').innerHTML = `<p class="tbsub" style="margin:0">要挑戰哪一種電腦？（你下紅棋先走）</p>
+      <button class="pbtn green big" data-lv="0">🐢 新手電腦</button><button class="pbtn blue big" data-lv="1">🐇 普通電腦</button><button class="pbtn big" data-lv="2">🐉 高手電腦</button>
+      <button class="pbtn gray" id="xqLvBack">返回</button>`;
+    $('xqBtns').querySelectorAll('[data-lv]').forEach(b => b.onclick = () => xqGame({ mode: 'cpu', level: +b.dataset.lv, tl }).then(xqOpenAgain));
+    $('xqLvBack').onclick = xqOpenAgain;
+  };
+  const hide = () => { const m = document.querySelector('.tbmenu'); if (m) m.style.display = 'none'; };
+  if (online) {
+    $('xqCreate').onclick = () => (hide(), netRoom.create('xq', { tl })).then(xqOpenAgain);
+    $('xqJoin').onclick = () => (hide(), netRoom.join('xq')).then(xqOpenAgain);
+  }
+}
+function xqOpenAgain() { UI.busy = false; world.active = false; $('ov').innerHTML = ''; xqOpen(); }
+
+// ---------- 一盤棋 ----------
+// o.mode 'cpu' | 'duo' | 'net'；net 時 o.side（0 紅 1 藍）、o.net（xqNet）、o.opName；o.tl 每步秒數
+function xqGame(o) {
+  return new Promise(res => {
+    const net = o.mode === 'net', duo = o.mode === 'duo', mySide = net ? o.side : 0, flip = mySide === 1, tl = XQ.TIMES.includes(o.tl) ? o.tl : 45;
+    const LVN = ['新手電腦', '普通電腦', '高手電腦'];
+    const names = duo ? ['紅方', '藍方'] : net ? (mySide ? [o.opName || '對手', me.name] : [me.name, o.opName || '對手']) : [me.name, LVN[o.level || 0]];
+    const human = s => duo || s === mySide;           // 這一方是不是在這台電腦上用滑鼠下
+    const st = xqNew(), bottom = flip ? 1 : 0;
+    $('ov').innerHTML = `<div class="pvwrap px" id="xqwrap"><div class="xqrow">
+      <div class="pvstage"><canvas id="xqC" width="${XQB.W}" height="${XQB.H}"></canvas><div class="pvmsg" id="xqMsg"></div></div>
+      <div class="xqside"><div class="xqcard" id="xqCard${1 - bottom}"></div><div class="xqstat" id="xqStat"></div>
+        <div class="xqbtns">${net ? '' : '<button class="pbtn small" id="xqUndo">↶ 悔棋</button>'}<button class="pbtn small gray" id="xqResign">認輸</button>${net ? '' : '<button class="pbtn small gray" id="xqQuit">離開</button>'}</div>
+        <div class="xqcard" id="xqCard${bottom}"></div></div></div></div>`;
+    const cv = $('xqC'), g = cv.getContext('2d');
+    const fit = () => { const k = Math.min((innerWidth - 300) / XQB.W, (innerHeight - 40) / XQB.H, 1.35); cv.style.width = Math.floor(XQB.W * k) + 'px'; cv.style.height = Math.floor(XQB.H * k) + 'px'; };
+    fit(); addEventListener('resize', fit);
+    const msg = (t, ms = 1000) => { const m = $('xqMsg'); m.textContent = t; m.className = 'pvmsg on'; clearTimeout(m._t); if (ms) m._t = setTimeout(() => m.className = 'pvmsg', ms); };
+    const icon = s => xqPieceImg(s ? 'k' : 'K', 18).toDataURL();
+    for (let s = 0; s < 2; s++) $('xqCard' + s).innerHTML = `<img src="${icon(s)}" alt=""><div class="xqn"><b style="color:${XQ_TEAM[s].ring}">${esc(names[s])}</b><span>${s ? '藍方・後走' : '紅方・先走'}</span>
+      <div class="xqbar"><i id="xqBar${s}"></i></div><em id="xqSec${s}"></em></div>`;
+    let ended = false, phase = 'wait', sel = null, dots = [], last = null, anim = null, checkAt = null, turnT = 0, thinking = false, raf = 0, warned = false;
+    const pend = {};
+    const view = () => ({ b: st.b, flip, sel, dots, last, check: checkAt, anim });
+    const status = () => {
+      const who = st.turn, el = $('xqStat'); if (!el) return;
+      let t;
+      if (ended) t = '';
+      else if (phase === 'wait') t = '準備開始……';
+      else if (duo) t = `輪到<b style="color:${XQ_TEAM[who].ring}">${who ? '藍方' : '紅方'}</b>`;
+      else if (who === mySide) t = '輪到你了！';
+      else t = net ? (turnT > tl + 20 ? '對手好像斷線了，再等一下……' : '對手思考中……') : '電腦思考中……';
+      if (!ended && checkAt != null) t += `<br><b class="xqchk">將軍！${human(who) ? '快保護你的' + (who ? '將' : '帥') : ''}</b>`;
+      el.innerHTML = t;
+      for (let s = 0; s < 2; s++) {
+        const on = !ended && phase === 'play' && s === who, left = Math.max(0, tl - turnT);
+        const bar = $('xqBar' + s); bar.style.width = (on ? left / tl * 100 : 100) + '%'; bar.style.background = !on ? '#5a5070' : left > tl * .5 ? '#6abe30' : left > 10 ? '#ffd23f' : '#e04f3f';
+        $('xqSec' + s).textContent = on ? (human(s) || net ? `${Math.ceil(left)} 秒` : '思考中') : '';
+        $('xqCard' + s).classList.toggle('on', on);
+      }
+      const u = $('xqUndo'); if (u) u.disabled = ended || phase !== 'play' || thinking || !!anim || st.hist.length < (duo ? 1 : 2) || !human(st.turn);
+    };
+    // ===== 走一步 =====
+    const doMove = (m, local) => {
+      if (ended || anim || phase !== 'play') return false;
+      const f = (m / 100) | 0, p = st.b[f], ply = st.ply, r = xqPlay(st, m);
+      if (!r) return false;
+      if (net && local) o.net.move(ply, m);
+      sel = null; dots = []; last = m; thinking = false;
+      anim = { from: f, to: m % 100, p, k: 0, t0: performance.now(), cap: r.cap !== '.', check: r.check };
+      xqThud(false);
+      return true;
+    };
+    const afterAnim = () => {
+      const a = anim; anim = null;
+      if (a.cap) xqThud(true);
+      checkAt = st.over < 0 && a.check ? xqKing(st.b, st.turn) : null;
+      if (checkAt != null) { msg('將軍！', 900); beep(880, .08, 'square', .05); beep(660, .12, 'square', .05, .09); }
+      startTurn();
+    };
+    const startTurn = () => {
+      if (ended) return;
+      if (st.over >= 0) return finish('end');
+      phase = 'play'; turnT = 0; warned = false;
+      const who = st.turn;
+      if (!duo && who !== mySide) {
+        if (!net) {
+          thinking = true; const t0 = performance.now(), ply = st.ply;
+          xqBrain.think(st, o.level || 0).then(m => setTimeout(() => { if (!ended && st.ply === ply && m != null) doMove(m, false); }, Math.max(0, 450 - (performance.now() - t0))));
+        } else if (pend[st.ply] != null) doMove(pend[st.ply], false);
+      }
+      status();
+    };
+    // ===== 滑鼠 =====
+    const down = e => {
+      if (ended || phase !== 'play' || anim || !human(st.turn)) return;
+      const i = xqHit(cv, e, flip); if (i < 0) return;
+      if (sel != null && dots.includes(sel * 100 + i)) { doMove(sel * 100 + i, true); return; }
+      if (xqSide(st.b[i]) === st.turn) {
+        if (sel === i) { sel = null; dots = []; return; }
+        sel = i; dots = xqMoves(st.b, st.turn, i); xqClick();
+        if (!dots.length) msg(checkAt != null ? '先解除將軍！' : '這顆現在不能走', 800);
+      } else { sel = null; dots = []; }
+    };
+    cv.addEventListener('pointerdown', down);
+    // ===== 計時（放在背景也會跑，動畫結束、時間到都在這裡處理）=====
+    let lastT = performance.now();
+    const tick = () => {
+      const now = performance.now(), dt = Math.min(1, (now - lastT) / 1000); lastT = now;
+      if (ended) return;
+      if (anim) { anim.k = (now - anim.t0) / 230; if (anim.k >= 1) afterAnim(); return; }
+      if (phase !== 'play') return;
+      turnT += dt;
+      if (human(st.turn) && turnT >= tl) { const m = xqAuto(st); msg('時間到！幫你走一步', 1200); if (m != null) doMove(m, true); }
+      else if (net && st.turn !== mySide && turnT > tl + 60) { msg('對手斷線了', 0); finish('leave'); }
+      if ((now / 250 | 0) !== (tick.s || 0)) { tick.s = now / 250 | 0; status(); }
+    };
+    const stopTick = (typeof bmBgTicker === 'function' ? bmBgTicker : f => { const id = setInterval(f, 50); return () => clearInterval(id); })(tick);
+    const loop = () => { try { xqDraw(g, view()); } catch (e) { console.warn(e); } if (!ended || anim) raf = requestAnimationFrame(loop); };
+    raf = requestAnimationFrame(loop);
+    // 測試用
+    window.__xq = { st, side: mySide, phase: () => phase, anim: () => !!anim, move: m => human(st.turn) && doMove(m, true), finish: w => finish(w) };
+    // ===== 連線 =====
+    if (net) {
+      o.net.onMove = (ply, m) => { if (ply < st.ply || pend[ply] != null) return; pend[ply] = m; if (ply === st.ply && st.turn !== mySide && phase === 'play' && !anim) doMove(m, false); };
+      o.net.onLeave = r => { if (!ended) { msg(r ? '對手認輸了' : '對手離開了', 0); finish(r ? 'oppResign' : 'leave'); } };
+    }
+    // ===== 按鈕 =====
+    if ($('xqUndo')) $('xqUndo').onclick = () => {
+      if (ended || anim || thinking || phase !== 'play') return;
+      const n = duo ? 1 : 2; if (st.hist.length < n) return;
+      for (let i = 0; i < n; i++) xqUndo(st);
+      const h = st.hist[st.hist.length - 1]; last = h ? h.m : null; sel = null; dots = [];
+      checkAt = xqInCheck(st.b, st.turn) ? xqKing(st.b, st.turn) : null; turnT = 0; xqClick(); status();
+    };
+    $('xqResign').onclick = async () => {
+      if (ended) return;
+      if (!(await askBox({ title: '認輸', text: duo ? `確定要讓${st.turn ? '藍方' : '紅方'}認輸嗎？` : '確定要認輸嗎？', ok: '認輸' }))) return;
+      finish('resign');
+    };
+    if ($('xqQuit')) $('xqQuit').onclick = async () => {
+      if (ended) return;
+      if (st.ply > 1 && !(await askBox({ title: '離開', text: '確定要離開這盤棋嗎？', ok: '離開' }))) return;
+      finish('quit');
+    };
+    hud0();
+    function hud0() { status(); msg('準備開始！', 1200); }
+    const startAt = o.startAt || Date.now() + 1200;
+    setTimeout(() => { if (!ended) startTurn(); }, Math.max(0, startAt - Date.now()));
+    function finish(why) {
+      if (ended) return; ended = true; phase = 'end'; stopTick(); sel = null; dots = [];
+      cv.removeEventListener('pointerdown', down); removeEventListener('resize', fit);
+      const RS = { mate: '將死', stuck: '沒有棋可以走（困斃）', repeat: '同樣的局面出現三次', quiet: '雙方很久都沒有吃子', long: '這盤棋下太久了' };
+      let win = null, title;
+      if (why === 'quit') { win = null; title = '已離開'; }
+      else if (why === 'leave') { win = true; title = '對手離開了，你贏了！'; }
+      else if (why === 'oppResign') { win = true; title = '對手認輸了，你贏了！'; }
+      else if (why === 'resign') { if (duo) title = `${st.turn ? '藍方' : '紅方'}認輸，${st.turn ? '紅方' : '藍方'}贏了！`; else { win = false; title = '你認輸了'; } }
+      else if (st.over === 2) title = `和棋！<small>${RS[st.why] || ''}</small>`;
+      else if (duo) title = `${st.over ? '藍方' : '紅方'}贏了！<small>${RS[st.why] || ''}</small>`;
+      else { win = st.over === mySide; title = (win ? '你贏了！' : '你輸了……') + `<small>${RS[st.why] || ''}</small>`; }
+      if (net) o.net.finish(why === 'resign' ? 'r' : why === 'quit');
+      if (win) SFX.win(); else if (win === false) SFX.wrong();
+      const gold = win && !duo && !((why === 'leave' || why === 'oppResign') && st.ply < 10) ? (net ? 20 : 10 + (o.level || 0) * 10) : 0;
+      if (gold) { me.gold += gold; saveMe(); updateHUD(); title += `<small>🪙 獲得 ${gold} 金幣</small>`; }
+      status();
+      if (why === 'quit') { cancelAnimationFrame(raf); return res(null); }
+      const box = document.createElement('div'); box.className = 'tbend';
+      box.innerHTML = `<div class="px"><h2>${title}</h2>${net ? '<button class="pbtn green big" id="xqAgain">再來一局</button> <button class="pbtn gray big" id="xqLeave">離開房間</button>' : '<button class="pbtn green big" id="xqOk">好</button>'}</div>`;
+      setTimeout(() => {
+        const w = $('xqwrap'); if (!w) return; w.appendChild(box);
+        if (net) { $('xqAgain').onclick = () => { cancelAnimationFrame(raf); res({ win, again: true }); }; $('xqLeave').onclick = () => { cancelAnimationFrame(raf); res({ win, again: false }); }; }
+        else $('xqOk').onclick = () => { cancelAnimationFrame(raf); res(win); };
+      }, why === 'end' ? 1100 : 300);
+    }
+  });
+}
+
+// 連線：只傳「第幾步走了哪一步」；認輸／離開用 bye
+function xqNet(base, uid, opp, host) {
+  const D = tbNet.D, db = tbNet.db, N = { onMove: null, onLeave: null, ended: false, seen: false };
+  const onRef = D.ref(db, `${base}/on/${uid}`);
+  D.set(onRef, true); D.onDisconnect(onRef).remove();
+  const subs = [];
+  subs.push(D.onChildAdded(D.ref(db, `${base}/m`), s => { const v = s.val(); if (v && v.by !== uid && N.onMove && !N.ended) N.onMove(Number(s.key), Number(v.m)); }));
+  subs.push(D.onValue(D.ref(db, `${base}/on/${opp}`), s => { if (s.val()) N.seen = true; else if (N.seen && !N.ended && N.onLeave) N.onLeave(false); }));
+  subs.push(D.onValue(D.ref(db, `${base}/bye/${opp}`), s => { const v = s.val(); if (v && !N.ended && N.onLeave) N.onLeave(v === 'r'); }));
+  N.move = (ply, m) => D.set(D.ref(db, `${base}/m/${ply}`), { by: uid, m });
+  N.finish = quit => {
+    if (N.ended) return; N.ended = true;
+    if (quit) D.set(D.ref(db, `${base}/bye/${uid}`), quit === 'r' ? 'r' : true);
+    setTimeout(() => { subs.forEach(f => f()); D.remove(onRef); if (host) setTimeout(() => D.remove(D.ref(db, base)), 3000); }, 1500);
+  };
+  return N;
+}
+
+// ---------- 新手教學：每一頁可以實際點棋子走走看 ----------
+function xqLearn() {
+  const P = (list) => { const b = Array(90).fill('.'); list.forEach(([p, r, c]) => b[r * 9 + c] = p); return b; };
+  const KK = [['k', 0, 5], ['K', 9, 3]];
+  const PAGES = [
+    { p: 'K', h: '帥（將）：國王', t: '只能待在有斜線的「<b>九宮</b>」裡，一次走<b>一格</b>，直走或橫走。<br>帥被吃掉就輸了，要好好保護！', b: [['k', 0, 3], ['K', 8, 4]], at: 8 * 9 + 4 },
+    { p: 'A', h: '仕（士）：近衛騎士', t: '也只能待在九宮裡，一次<b>斜走一格</b>，是帥身邊的護衛。', b: KK.concat([['A', 8, 4]]), at: 8 * 9 + 4 },
+    { p: 'B', h: '相（象）：法師', t: '走「<b>田</b>」字（斜走兩格），<b>不能過河</b>。<br>田字中間有棋子擋住就不能走，叫做「塞象眼」。', b: KK.concat([['B', 7, 4], ['P', 6, 5]]), at: 7 * 9 + 4 },
+    { p: 'R', h: '俥（車）：戰車', t: '<b>直線</b>走，幾格都可以，但<b>不能跳過</b>棋子。<br>是威力最大的棋子！', b: KK.concat([['R', 7, 1], ['P', 7, 6], ['n', 2, 1]]), at: 7 * 9 + 1 },
+    { p: 'N', h: '傌（馬）：戰馬', t: '走「<b>日</b>」字（先直走一格，再斜走一格）。<br>前進方向緊貼著棋子就走不過去，叫做「拐馬腳」。', b: KK.concat([['N', 7, 4], ['P', 6, 4]]), at: 7 * 9 + 4 },
+    { p: 'C', h: '炮（砲）：魔法砲台', t: '平常跟車一樣直線走；要<b>吃子</b>的時候，中間一定要<b>剛好隔一顆</b>棋子，跳過去吃！<br>試試看吃掉上面的藍色棋子。', b: KK.concat([['C', 7, 4], ['P', 5, 4], ['r', 2, 4]]), at: 7 * 9 + 4 },
+    { p: 'P', h: '兵（卒）：小勇者', t: '<b>過河以前</b>只能往前走一格；<b>過河以後</b>也可以往左右走，但永遠<b>不能後退</b>。', b: KK.concat([['P', 6, 2], ['P', 3, 6]]), at: 3 * 9 + 6 },
+    { p: 'k', h: '將軍和勝負', t: '帥被對方攻擊叫「<b>將軍</b>」，一定要馬上解除。<br>解除不了就是「<b>將死</b>」，那一方就輸了！<br>還有：帥和將<b>不能在同一直線上面對面</b>。', b: [['k', 0, 3], ['R', 0, 8], ['R', 1, 0], ['K', 9, 4]], at: null }
+  ];
+  return new Promise(res => {
+    let pg = 0, st = null, sel = null, dots = [], last = null, ended = false, raf = 0;
+    $('ov').innerHTML = `<div class="pvwrap px" id="xqwrap"><div class="xqrow">
+      <div class="pvstage"><canvas id="xqC" width="${XQB.W}" height="${XQB.H}"></canvas></div>
+      <div class="xqside xqlearn"><div class="xqpg" id="xqPg"></div><div class="xqlh" id="xqLh"></div><div class="xqlt" id="xqLt"></div>
+        <button class="pbtn small gray" id="xqReset">↺ 再試一次</button>
+        <div class="xqbtns"><button class="pbtn small" id="xqPrev">上一頁</button><button class="pbtn small green" id="xqNext">下一頁</button></div>
+        <button class="pbtn gray" id="xqLBack">回到選單</button></div></div></div>`;
+    const cv = $('xqC'), g = cv.getContext('2d');
+    const fit = () => { const k = Math.min((innerWidth - 320) / XQB.W, (innerHeight - 40) / XQB.H, 1.25); cv.style.width = Math.floor(XQB.W * k) + 'px'; cv.style.height = Math.floor(XQB.H * k) + 'px'; };
+    fit(); addEventListener('resize', fit);
+    const show = () => {
+      const P2 = PAGES[pg]; st = { b: P(P2.b), turn: 0 }; last = null;
+      sel = P2.at; dots = sel != null ? xqMoves(st.b, 0, sel) : [];
+      $('xqPg').textContent = `${pg + 1} / ${PAGES.length}`;
+      $('xqLh').innerHTML = `<img src="${xqPieceImg(P2.p, 24).toDataURL()}" alt=""><b>${P2.h}</b>`;
+      $('xqLt').innerHTML = P2.t + (P2.at != null ? '<div class="xqtry">點亮起來的位置，走走看！</div>' : '');
+      $('xqPrev').disabled = pg === 0;
+      $('xqNext').textContent = pg === PAGES.length - 1 ? '開始跟新手電腦下' : '下一頁';
+    };
+    const down = e => {
+      const i = xqHit(cv, e, false); if (i < 0 || !st) return;
+      if (sel != null && dots.includes(sel * 100 + i)) {
+        const cap = st.b[i] !== '.'; st.b[i] = st.b[sel]; st.b[sel] = '.'; last = sel * 100 + i; xqThud(cap);
+        sel = i; dots = xqMoves(st.b, 0, i); return;
+      }
+      if (xqSide(st.b[i]) === 0) { sel = i; dots = xqMoves(st.b, 0, i); xqClick(); } else { sel = null; dots = []; }
+    };
+    cv.addEventListener('pointerdown', down);
+    const loop = () => { if (ended) return; xqDraw(g, { b: st.b, flip: false, sel, dots, last, check: xqInCheck(st.b, 1) ? xqKing(st.b, 1) : null }); raf = requestAnimationFrame(loop); };
+    const end = v => { ended = true; cancelAnimationFrame(raf); cv.removeEventListener('pointerdown', down); removeEventListener('resize', fit); res(v); };
+    $('xqReset').onclick = () => { show(); xqClick(); };
+    $('xqPrev').onclick = () => { if (pg > 0) { pg--; show(); xqClick(); } };
+    $('xqNext').onclick = () => { if (pg < PAGES.length - 1) { pg++; show(); xqClick(); } else end('cpu'); };
+    $('xqLBack').onclick = () => end(null);
+    show(); raf = requestAnimationFrame(loop);
+    window.__xqLearn = { page: () => pg, st: () => st, dots: () => dots };
+  });
+}
+
+(() => {
+  const st = document.createElement('style');
+  st.textContent = `
+.xqtl{display:flex;gap:8px;justify-content:center;align-items:center;font-weight:800;margin-top:6px}.xqtl .pbtn{width:84px}
+.xqrow{display:flex;gap:18px;align-items:center}
+.xqside{width:250px;display:flex;flex-direction:column;gap:12px;color:#fff}
+.xqcard{display:flex;gap:10px;align-items:center;background:#1d1530;border:3px solid #5a4a80;padding:8px 10px;height:86px;box-sizing:border-box}
+.xqcard.on{border-color:#ffd23f;box-shadow:0 0 14px rgba(255,210,63,.45)}
+.xqcard img{width:40px;height:40px;image-rendering:auto}
+.xqn{flex:1;min-width:0}.xqn b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.xqn span{font-size:12px;color:#b8a8d8}
+.xqbar{height:10px;background:#2a2238;border:2px solid #8a7ab0;margin-top:4px}.xqbar i{display:block;height:100%;width:100%}
+.xqn em{font-style:normal;font-size:13px;color:#ffe3a3;display:block;height:16px}
+.xqstat{height:64px;background:#120d1e;border:3px solid #5a4a80;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;font-size:18px;line-height:1.35;color:#ffe3a3}
+.xqchk{color:#ff7a6a;font-size:16px}
+.xqbtns{display:flex;gap:8px;justify-content:center}.xqbtns .pbtn{width:76px}.xqbtns .pbtn[disabled]{opacity:.4}
+.xqlearn{width:300px}.xqlearn > .pbtn{align-self:center;width:200px}.xqlearn .xqbtns .pbtn{width:140px}
+.xqpg{font-size:13px;color:#b8a8d8;text-align:right}
+.xqlh{display:flex;align-items:center;gap:10px;font-size:20px}.xqlh img{width:52px;height:52px}
+.xqlt{background:#fff8e6;color:#3a2a1a;border:3px solid #3a2a1a;padding:12px;font-size:16px;line-height:1.65;font-weight:700;height:230px;box-sizing:border-box;overflow:auto}
+.xqtry{margin-top:8px;color:#2f7a2a;font-weight:900}
+#xqC{cursor:pointer;touch-action:none}`;
   document.head.appendChild(st);
 })();
 // =====================================================================
