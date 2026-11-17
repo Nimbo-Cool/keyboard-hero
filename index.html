@@ -2688,7 +2688,7 @@ WAVES.paintFree = (w, A, done) => {
   S.msg('自由畫畫！畫好按右上角的「完成作品」。小提醒：Shift 畫正圓、Ctrl＋Z 復原');
   setHud('🎨 自由創作'); setTimer('');
   const b = document.createElement('button'); b.className = 'pbtn green small'; b.textContent = '✅ 完成作品'; b.style.cssText = 'position:absolute;right:12px;top:10px;z-index:5';
-  b.onclick = () => { if (typeof galleryAdd === 'function') galleryAdd(w.title, S.cells, w.gift); done({ score: 1, msg: '好漂亮的作品！已經收進「🎒 背包 → 🖼️ 我的作品」' }); }; A.appendChild(b);
+  b.onclick = () => { if (typeof galleryAdd === 'function') galleryAdd(w.title, S.cells, w.gift, w.slot); done({ score: 1, msg: '好漂亮的作品！已經收進「🎒 背包 → 🖼️ 我的作品」' }); }; A.appendChild(b);
 };
 
 // =====================================================================
@@ -5320,7 +5320,7 @@ const MINIS_3A = {
   paint2: { title: '畫室的危機', icon: '🧽', arena: 'paper', waves: [
     { type: 'paintShape', title: '畫形狀', tip: '用 <b>▭ 矩形</b> 和 <b>◯ 橢圓</b> 工具，按住滑鼠左鍵從左上拖到右下。<br>按住 <b>Shift</b> 可以畫出正圓形！' },
     { type: 'paintErase', title: '橡皮擦和復原魔法', tip: '用 <b>🧽 橡皮擦</b> 擦掉墨水。<br>如果畫被弄亂了，按 <b>Ctrl＋Z</b> 就能復原！' }] },
-  art: { title: '送給村長的畫', icon: '🎨', arena: 'paper', waves: [{ type: 'paintFree', title: '我的像素村', gift: 'chief', tip: '畫一張「像素村」送給村長！<br>可以畫房子、樹、太陽、你的勇者……<b>油漆桶、矩形、橢圓、鉛筆</b>都能用。' }] },
+  art: { title: '送給村長的畫', icon: '🎨', arena: 'paper', waves: [{ type: 'paintFree', title: '我的像素村', gift: 'chief', slot: 'm:art', tip: '畫一張「像素村」送給村長！<br>可以畫房子、樹、太陽、你的勇者……<b>油漆桶、矩形、橢圓、鉛筆</b>都能用。' }] },
   letters: { title: '找鍵大師', icon: '🔠', waves: [
     KR('上排：Q 到 P', '手指往上伸一格就到上排，按完回家！', codesOf('QWERTYUIOP'), 18, 6.8, 1.5),
     KR('下排：Z 到 M', '手指往下彎一格就到下排。', codesOf('ZXCVBNM'), 16, 6.8, 1.5),
@@ -17916,7 +17916,7 @@ setInterval(() => { try { musWant(); musTick(); } catch (e) {} }, 100);
 //  ‧送給村長的畫：去找村長，村長會說掛在家裡，還能再看一次
 //  ‧一張圖只存 32×20 格的顏色編號（640 個字），存檔不會變大很多
 // =====================================================================
-const ART_MAX = 30;
+const ART_MAX = 30; // 舊版上限，現在改由 artTidy 管
 function artEncode(cells) {
   return cells.map(r => r.map(c => { const i = PAINT_COLORS.indexOf(String(c).toLowerCase()); return (i < 0 ? 1 : i).toString(36); }).join('')).join('');
 }
@@ -17925,14 +17925,32 @@ function artCells(a) {
   for (let y = 0; y < H; y++) { const row = []; for (let x = 0; x < W; x++) row.push(PAINT_COLORS[parseInt(a.d[y * W + x] || '1', 36)] || '#ffffff'); out.push(row); }
   return out;
 }
-function galleryAdd(title, cells, gift) {
+// 保存規則：主線作品每一關留一張、節日作品每個節日留一張（重做就新的取代舊的）；自由創作只留最新 5 張
+const ART_FREE = 5;
+function artSlot(a) {
+  if (!a) return '';
+  if (a.s) return a.s;
+  if (a.g === 'chief') return 'm:art';
+  if (a.g === 'card') {
+    if (a.f) return 'f:' + a.f;
+    const f = typeof FESTS !== 'undefined' && FESTS.find(x => x.card === a.t || (x.work && x.work.t === a.t));
+    return f ? 'f:' + f.id : 'f:?' + a.id;
+  }
+  return '';
+}
+const artKind = a => { const s = artSlot(a); return s ? s[0] : 'x'; };
+function artTidy(L) {
+  L = (L || []).filter(x => x && x.id).sort((x, y) => (x.at || 0) - (y.at || 0));
+  const last = {}; L.forEach(x => { const s = artSlot(x); if (s) last[s] = x; });
+  const free = L.filter(x => !artSlot(x)).slice(-ART_FREE);
+  return L.filter(x => { const s = artSlot(x); return s ? last[s] === x : free.includes(x); });
+}
+function galleryAdd(title, cells, gift, slot) {
   if (!me || !cells) return null;
-  me.art = me.art || [];
   const a = { id: Date.now().toString(36), t: String(title || '我的作品').slice(0, 20), at: Date.now(), w: cells[0].length, h: cells.length, d: artEncode(cells) };
   if (gift) a.g = gift;
-  me.art.push(a);
-  // 太多就丟掉最舊的（送給別人的畫留著）
-  while (me.art.length > ART_MAX) { const i = me.art.findIndex(x => !x.g); me.art.splice(i < 0 ? 0 : i, 1); }
+  if (slot) a.s = slot;
+  me.art = artTidy((me.art || []).concat([a]));
   saveMe();
   return a;
 }
@@ -17999,9 +18017,10 @@ async function artDelete(id) {
 // 作品集視窗
 function openGallery(focus) {
   if (!me) return;
-  const list = (me.art || []).slice().reverse();
+  me.art = artTidy(me.art);
+  const list = me.art.slice().reverse();
   openModal(`<div class="mtitle">🖼️ 我的作品 <button class="pbtn small gray" style="margin-left:auto" onclick="closeModal()">關閉</button></div>
-    ${list.length ? `<div style="font-weight:800;margin-bottom:8px">在小畫家畫好、按「完成作品」的圖都會放在這裡。點一張可以看大圖、下載或列印。</div>
+    ${list.length ? `<div style="font-weight:800;margin-bottom:8px">在小畫家畫好、按「完成作品」的圖都會放在這裡。點一張可以看大圖、下載或列印。<br><small>同一關或同一個節日重畫，新的會換掉舊的；自由創作只留最新 5 張。</small></div>
     <div class="artgrid">${list.map(a => `<button class="artcard" onclick="artView('${a.id}')"><canvas data-art="${a.id}"></canvas><b>${esc(a.t)}</b><small>${artDate(a.at)}${artTo(a) ? `・送給${artTo(a)}` : ''}</small></button>`).join('')}</div>`
       : '<div style="font-weight:800;padding:20px 0">還沒有作品喔！去畫室用小畫家畫一張吧～</div>'}`);
   document.querySelectorAll('canvas[data-art]').forEach(cv => { const a = me.art.find(x => x.id === cv.dataset.art); if (a) artDraw(cv, a, 6); });
@@ -18018,8 +18037,32 @@ function artView(id) {
       <button class="pbtn gray" onclick="artDelete('${a.id}')">🗑️ 刪除</button></div>`);
   artDraw($('artBig'), a, 18);
 }
+// ---------- 補畫：作品集是後來才加的，之前畫的「像素村」沒有存下來 ----------
+// 已經過了「送給村長的畫」、作品集裡卻沒有送給村長的畫 → 村長頭上有「❗」，找他說話會請你再畫一幅（不強制）
+// 改版後才畫的人作品集裡已經有那幅畫，不會被打擾；還沒走到那一關的人照原本的流程
+const REDRAW = { pack: '3-0', after: 'q_art', who: 'chief', mini: 'art', gold: 20 };
+function redrawNeed(id) {
+  if (id !== REDRAW.who || !me || typeof PACK === 'undefined' || PACK !== PACKS[REDRAW.pack]) return false;
+  const i = PACK.quests.findIndex(q => q.id === REDRAW.after);
+  return i >= 0 && me.quest > i && !(me.art || []).some(a => a.g === REDRAW.who);
+}
+async function redrawTalk(id) {
+  await dialog([[id, '勇者，你來啦……有件事要跟你說，對不起。'], [id, '前幾天下大雨，屋頂漏水，你送我的那幅「像素村」被淋濕了，顏色全部糊在一起。'], [id, '畫家說可以把畫架借給我。']]);
+  const v = await choose(id, '你願意再幫我畫一幅嗎？', [{ t: '🎨 好，我再畫一幅！', v: 1 }, { t: '下次再說', v: 0 }]);
+  if (!v) return dialog([[id, '沒關係，想畫的時候再來找我，畫架我會一直擺著。']]).then(() => true);
+  await playMini(REDRAW.mini, true);
+  if (redrawNeed(id)) { await dialog([[id, '沒關係，想畫的時候再來找我，畫架我會一直擺著。']]); return true; }
+  me.gold += REDRAW.gold; saveMe(); updateHUD(); if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+  await dialog([[id, `太好了，比上一幅還要漂亮！這 ${REDRAW.gold} 金幣是一點心意，收下吧。`]]);
+  return giftTalk(id);
+}
+(() => {
+  const mark = questMark;
+  questMark = e => mark(e) || (redrawNeed(e.id) ? '❗' : null);
+})();
 // 村長收到畫：第一次去找村長時會說掛在家裡，再給你看一次
 async function giftTalk(id) {
+  if (redrawNeed(id)) return redrawTalk(id);
   const a = (me.art || []).slice().reverse().find(x => x.g === id);
   if (!a || a.seen) return false;
   a.seen = 1; saveMe();
@@ -18039,7 +18082,7 @@ async function giftTalk(id) {
 // =====================================================================
 //  節慶村：節日到了，傳送石會多一個「節慶村」
 //  ‧依日期自動開：節日前兩週開到節日後一週（農曆節日照年份對照表）；老師後台也可以手動開／關
-//  ‧每個節慶村三個任務：節日小知識＋祝福打字、電腦小技能、做一張卡片（可以下載、列印）
+//  ‧每個節慶村三個任務：節日小知識＋祝福打字、電腦小技能、做一張卡片或節日作品（可以下載、列印；每個節日留最新的一張）
 //  ‧每年都可以再玩一次；三個都完成可以換一個限定稱號
 // =====================================================================
 const FEST_LUNAR = {
@@ -18072,7 +18115,7 @@ const FESTS = [
     words: ['中秋節快樂', '月圓人團圓', '一起賞月', '月餅', '玉兔', '嫦娥'],
     skill: { title: '接住月餅', tip: '天上掉下好多點心！<br>🥮 月餅<b>點一下</b>、🎁 禮盒<b>點兩下</b>、🌙 月亮按<b>右鍵</b>。', w: { type: 'click', mode: 'mix', e: '🥮', de: '🎁', re: '🌙', n: 14, size: 82, life: 3.2, conc: 2 } } },
   { id: 'halloween', n: '萬聖節', icon: '🎃', village: '南瓜村', theme: 'festnight', day: '10-31', before: 14, after: 7, deco: ['pumpkin', 'lamp'],
-    title: '🎃 南瓜勇者', to: ['好朋友', '家人', '老師'], card: '萬聖節卡片',
+    title: '🎃 南瓜勇者', to: ['好朋友', '家人', '老師'], card: '萬聖節卡片', work: { t: '我的南瓜燈', icon: '🎃', ask: '萬聖節到了，家家戶戶都要掛南瓜燈！', ask2: '來設計一個你自己的南瓜燈吧！笑臉、鬼臉、你發明的表情都可以，也可以畫成變裝面具。', tip: '設計你的<b>南瓜燈</b>或<b>變裝面具</b>！用<b>橢圓</b>畫南瓜、<b>油漆桶</b>上色，再畫上表情。' },
     hi: ['十月三十一日是萬聖節，到處都是南瓜燈！', '小朋友會打扮成各種角色，說「Trick or treat」。'],
     quiz: [FQ('萬聖節是幾月幾日？', ['10 月 31 日', '12 月 25 日', '1 月 1 日', '4 月 4 日'], '萬聖節在十月的最後一天。'),
       FQ('萬聖節最常見的裝飾是？', ['南瓜燈', '粽子', '紅包', '月餅'], '把南瓜挖空刻上臉，放蠟燭就是南瓜燈。'),
@@ -18101,7 +18144,7 @@ const FESTS = [
       { k: 'click', say: '先<b>點一下</b>新年計畫' }, { k: 'KeyC', say: '按 <b>Ctrl＋C</b> 複製', key: 'Ctrl ＋ C', fx: '複製好了' }, { k: 'KeyV', say: '按 <b>Ctrl＋V</b> 貼上', key: 'Ctrl ＋ V', fx: '多一份給家人！' },
       { k: 'KeyZ', say: '貼太多了！按 <b>Ctrl＋Z</b> 復原', key: 'Ctrl ＋ Z', fx: '回到上一步' }, { k: 'KeyA', say: '按 <b>Ctrl＋A</b> 全選', key: 'Ctrl ＋ A', fx: '全部選起來了' }, { k: 'KeyS', say: '按 <b>Ctrl＋S</b> 存檔', key: 'Ctrl ＋ S', fx: '新年計畫存好了！' }] } } },
   { id: 'lantern', n: '元宵節', icon: '🏮', village: '元宵燈會村', theme: 'festnight', lunar: 'lantern', before: 14, after: 7, deco: ['lantern', 'lantern2'],
-    title: '🏮 燈謎勇者', to: ['家人', '好朋友', '老師'], card: '元宵卡片',
+    title: '🏮 燈謎勇者', to: ['家人', '好朋友', '老師'], card: '元宵卡片', work: { t: '我的花燈', icon: '🏮', ask: '元宵節晚上大家都會提著花燈出門！', ask2: '來設計一盞你自己的花燈吧！可以是動物、生肖，或任何你想得到的形狀。', tip: '設計你的<b>花燈</b>！可以是動物、生肖或任何形狀，記得畫上提把和燈光。' },
     hi: ['農曆一月十五是元宵節，是新年後第一個月圓的晚上！', '大家提燈籠、猜燈謎、吃湯圓。'],
     quiz: [FQ('元宵節是農曆幾月幾日？', ['一月十五日', '八月十五日', '五月五日', '十二月三十日'], '新年後第一個滿月。'),
       FQ('元宵節常吃的是？', ['湯圓', '粽子', '月餅', '南瓜派'], '圓圓的湯圓代表團圓。'),
@@ -18111,7 +18154,7 @@ const FESTS = [
     words: ['元宵節快樂', '提燈籠', '猜燈謎', '湯圓', '團團圓圓'],
     skill: { title: '點亮花燈', tip: '燈會要開始了，幫忙點亮花燈！<br>🏮 燈籠<b>點一下</b>、🎁 燈謎禮物<b>點兩下</b>、🌙 月亮按<b>右鍵</b>。', w: { type: 'click', mode: 'mix', e: '🏮', de: '🎁', re: '🌙', n: 14, size: 82, life: 3.2, conc: 2 } } },
   { id: 'children', n: '兒童節', icon: '🎈', village: '兒童樂園村', theme: 'village', day: '04-04', before: 14, after: 7, deco: ['balloon', 'flower'],
-    title: '🎈 快樂兒童勇者', to: ['好朋友', '家人', '老師'], card: '兒童節卡片',
+    title: '🎈 快樂兒童勇者', to: ['好朋友', '家人', '老師'], card: '兒童節卡片', work: { t: '我的夢想', icon: '🎈', ask: '兒童節快樂！今天來聊聊夢想。', ask2: '長大以後想做什麼、想去哪裡？把你的夢想畫下來吧！', tip: '畫出<b>你的夢想</b>：長大想做的工作、想去的地方、想完成的事都可以。' },
     hi: ['四月四日是兒童節，祝你天天開心、健康長大！', '今天來學怎麼在網路上保護自己。'],
     quiz: [FQ('兒童節是幾月幾日？', ['4 月 4 日', '5 月 5 日', '9 月 28 日', '12 月 25 日'], '四月四日，祝每個小朋友都快樂！'),
       FQ('兒童節常跟哪個節日一起放假？', ['清明節', '中秋節', '聖誕節', '端午節'], '兒童節和清明節很接近，常常一起放連假。'),
@@ -18131,7 +18174,7 @@ const FESTS = [
       { k: 'click', say: '先<b>點一下愛心</b>選取它' }, { k: 'KeyC', say: '按 <b>Ctrl＋C</b> 複製', key: 'Ctrl ＋ C', fx: '複製好了' }, { k: 'KeyV', say: '按 <b>Ctrl＋V</b> 貼上', key: 'Ctrl ＋ V', fx: '兩顆愛心！' },
       { k: 'KeyV', say: '再按 <b>Ctrl＋V</b>', key: 'Ctrl ＋ V', fx: '三顆愛心！' }, { k: 'KeyZ', say: '多貼了一顆，按 <b>Ctrl＋Z</b> 復原', key: 'Ctrl ＋ Z', fx: '回到上一步' }, { k: 'KeyS', say: '按 <b>Ctrl＋S</b> 存檔', key: 'Ctrl ＋ S', fx: '愛心卡存好了！' }] } } },
   { id: 'dragon', n: '端午節', icon: '🐉', village: '龍舟村', theme: 'beach', lunar: 'dragon', before: 14, after: 7, deco: ['zongzi', 'flower'],
-    title: '🐉 龍舟勇者', to: ['家人', '好朋友', '老師'], card: '端午卡片',
+    title: '🐉 龍舟勇者', to: ['家人', '好朋友', '老師'], card: '端午卡片', work: { t: '我的香包', icon: '🐉', ask: '端午節要配香包，祝福大家平安健康！', ask2: '來設計一個香包的圖案吧！粽子、龍舟、小動物都可以。', tip: '設計你的<b>香包</b>！先畫出香包的形狀，再畫上圖案，最後加一條掛繩。' },
     hi: ['農曆五月五日是端午節！', '大家吃粽子、看龍舟比賽，還會掛香包。'],
     quiz: [FQ('端午節是農曆幾月幾日？', ['五月五日', '八月十五日', '一月十五日', '七月七日'], '所以端午節也叫「五月節」。'),
       FQ('端午節常吃的是？', ['粽子', '月餅', '湯圓', '蛋糕'], '台灣有北部粽、南部粽，你喜歡哪一種？'),
@@ -18181,7 +18224,7 @@ function festArea(f) {
     dec(D[0], 40), dec(D[1], 70),
     H(110, 72, 42, '#fff1d6', '#c94c4c', `${f.icon} 慶典舞台`, { windows: [6, 56] }), dec(D[0], 196),
     dec(D[1], 300), H(330, 64, 40, '#f7e6c4', '#3a6fb0', '🎁 節日市集'), dec(D[0], 414),
-    dec(D[1], 520), H(552, 64, 40, '#e8f4ff', '#d14c7a', '💌 卡片郵局'), dec(D[0], 640),
+    dec(D[1], 520), f.work ? H(552, 64, 40, '#fff4e0', '#7a4ea8', '🎨 創作小屋') : H(552, 64, 40, '#e8f4ff', '#d14c7a', '💌 卡片郵局'), dec(D[0], 640),
     dec(D[1], 720), dec(D[0], 780), { d: 'sign', x: 840, label: `${f.icon} ${f.village}` }];
   if (f.theme === 'festnight') deco.unshift({ d: 'f_moonbig', x: 700, dy: -130 });
   return { name: `${f.icon} ${f.village}`, theme: f.theme, w: 62, start: 260, home: true, fest: f.id, deco,
@@ -18189,7 +18232,7 @@ function festArea(f) {
       { t: 'stone', x: 250, name: '傳送石', use: () => travel() },
       { t: 'npc', id: 'festhost', x: 188, use: () => talkTo('festhost') },
       { t: 'door', x: 356, w: 12, name: '節日市集', use: () => talkTo('festshop') }, { t: 'npc', id: 'festshop', x: 400, use: () => talkTo('festshop') },
-      { t: 'door', x: 578, w: 12, name: '卡片郵局', use: () => talkTo('postman') }, { t: 'npc', id: 'postman', x: 622, use: () => talkTo('postman') }] };
+      ...(c => [{ t: 'door', x: 578, w: 12, name: f.work ? '創作小屋' : '卡片郵局', use: () => talkTo(c) }, { t: 'npc', id: c, x: 622, use: () => talkTo(c) }])(f.work ? 'festart' : 'postman')] };
 }
 function festRegister() {
   if (typeof PACK === 'undefined' || !PACK) return [];
@@ -18200,7 +18243,7 @@ function festRegister() {
 const festHere = () => world && world.A && world.A.fest ? FEST_BY[world.A.fest] : null;
 
 // ---------- 三個任務 ----------
-const FEST_TASK = { festhost: 'a', festshop: 'b', postman: 'c' };
+const FEST_TASK = { festhost: 'a', festshop: 'b', postman: 'c', festart: 'c' };
 function festTyping(f) {
   const g = FEST_GS[0], s = FEST_GS[1];
   if (g === 3 && s === 0) return { type: 'keyrain', title: '祝福字母雨', tip: '還沒學注音輸入法也沒關係！<br>看<b>下面的鍵盤圖</b>，找到一樣的字母按下去，祝福就會送出去。慢慢找沒關係。', keys: LETTERS, n: 14, fall: 7.2, gap: 1.3 };
@@ -18219,14 +18262,17 @@ function festMini(f, k) {
     if (w.keys === 'LETTERS') w.keys = LETTERS; if (w.keys === 'HOME') w.keys = codesOf('ASDFJKL;');
     return { title: f.skill.title, icon: f.icon, waves: [w] };
   }
+  if (f.work) return { title: f.work.t, icon: f.work.icon, arena: 'paper', waves: [
+    { type: 'paintFree', title: f.work.t, slot: 'f:' + f.id, tip: `${f.work.tip}<br>畫好按右上角的「完成作品」。小提醒：按住 <b>Shift</b> 畫正圓、<b>Ctrl＋Z</b> 復原。` }] };
   return { title: f.card, icon: '💌', arena: 'paper', waves: [
-    { type: 'paintFree', title: f.card, gift: 'card', tip: `畫一張${f.card}！畫好按右上角的「完成作品」。<br>小提醒：按住 <b>Shift</b> 畫正圓、<b>Ctrl＋Z</b> 復原。` },
+    { type: 'paintFree', title: f.card, gift: 'card', slot: 'f:' + f.id, tip: `畫一張${f.card}！畫好按右上角的「完成作品」。<br>小提醒：按住 <b>Shift</b> 畫正圓、<b>Ctrl＋Z</b> 復原。` },
     { type: 'cardMsg', title: '寫上祝福', tip: '選一個要送的人，再寫一句祝福（可以用注音輸入法，也可以直接按下面的句子）。', fest: f.id }] };
 }
 const FEST_SAY = {
   a: f => [['festhost', `歡迎來到${f.village}！${f.hi[0]}`], ['festhost', f.hi[1]], ['festhost', '來挑戰「節日小知識」，再把祝福語打出來吧！']],
   b: f => [['festshop', `${f.n}市集好忙喔！可以幫我一個忙嗎？`], ['festshop', '這次要用到電腦小技能，你一定沒問題！']],
-  c: f => [['postman', `我是卡片郵差！${f.n}到了，要不要做一張卡片送人？`], ['postman', '畫好、寫上祝福，就會收進「🎒 背包 → 🖼️ 我的作品」，可以下載，也可以印出來喔！']]
+  c: f => f.work ? [['festart', f.work.ask], ['festart', f.work.ask2], ['festart', '畫好會收進「🎒 背包 → 🖼️ 我的作品」，可以下載，也可以印出來喔！']]
+    : [['postman', `我是卡片郵差！${f.n}到了，要不要做一張卡片送人？`], ['postman', '畫好、寫上祝福，就會收進「🎒 背包 → 🖼️ 我的作品」，可以下載，也可以印出來喔！']]
 };
 async function festTalk(npc) {
   const f = festHere(), k = FEST_TASK[npc];
@@ -18235,7 +18281,7 @@ async function festTalk(npc) {
   if (!key) { await dialog([[npc, `${f.n}的活動結束囉！明年見～`]]); return; }
   const R = festRec(key);
   if (R[k]) {
-    if (k === 'c') { const v = await choose(npc, '要再做一張卡片嗎？', [{ t: '💌 再做一張', v: 1 }, { t: '🖼️ 看我的作品', v: 2 }, { t: '先不用', v: 0 }]); if (v === 2) return openGallery(); if (!v) return; }
+    if (k === 'c') { const v = await choose(npc, f.work ? `要重畫一張嗎？新的會換掉舊的那張。` : '要再做一張卡片嗎？新的會換掉舊的那張。', [{ t: f.work ? '🎨 重畫一張' : '💌 再做一張', v: 1 }, { t: '🖼️ 看我的作品', v: 2 }, { t: '先不用', v: 0 }]); if (v === 2) return openGallery(); if (!v) return; }
     else { const v = await choose(npc, '你已經完成這個任務了！要再玩一次嗎？（不會再拿獎勵）', [{ t: '▶ 再玩一次', v: 1 }, { t: '先不用', v: 0 }]); if (!v) return; }
     await runMini(festMini(f, k));
     if (k === 'c') await festCardDone(f);
@@ -18260,6 +18306,11 @@ async function festTalk(npc) {
 }
 async function festCardDone(f) {
   const a = (me.art || [])[(me.art || []).length - 1];
+  if (f.work) {
+    if (!a || a.s !== 'f:' + f.id) return;
+    await dialog([['festart', `《${a.t}》完成了！好有創意！`], ['festart', '想掛在家裡或教室，按「🖨️ 列印」就能印出來。']]);
+    return openGallery(a.id);
+  }
   if (!a || a.g !== 'card') return;
   await dialog([['postman', `收到你的${f.card}了！${a.to ? `${a.to}一定會很開心。` : ''}`], ['postman', '按「🖨️ 列印」就能印出來，親手送給對方吧！']]);
   openGallery(a.id);
@@ -18336,6 +18387,7 @@ WAVES.cardMsg = (w, A, done) => {
 Object.assign(NPC_DEF, {
   festhost: { n: '慶典主持人', pal: { h: '#3b2a1f', c: '#d33c3c', p: '#2b2b3a', s: '#f5c99b' }, extra: P => { P.rect(3, -1, 6, 2, '#ffd23f'); P.rect(2, 1, 8, 1, '#ffd23f'); P.px(5, 9, '#ffd23f'); P.px(6, 10, '#ffd23f'); } },
   festshop: { n: '市集老闆', pal: { h: '#6b3e1f', c: '#f08a24', p: '#5a3a22', s: '#e8b98f' }, extra: P => { P.rect(3, 9, 6, 4, '#fff6e0'); P.rect(2, 1, 8, 1, '#f2f2f2'); } },
+  festart: { n: '節日小畫家', pal: { h: '#2b1d14', c: '#7a4ea8', p: '#3a2a4a', s: '#f5c99b' }, extra: P => { P.rect(2, -1, 8, 2, '#d33c3c'); P.rect(1, 0, 3, 1, '#d33c3c'); P.rect(8, 9, 3, 3, '#ffd23f'); P.px(9, 10, '#3a6fb0'); } },
   postman: { n: '卡片郵差', pal: { h: '#3b2a1f', c: '#2f5fa8', p: '#2b2b3a', s: '#f5c99b' }, extra: P => { P.rect(2, 0, 8, 2, '#2f5fa8'); P.rect(2, 2, 9, 1, '#1f3f78'); P.rect(8, 9, 4, 4, '#c79a5b'); P.rect(8, 9, 4, 1, '#7a4e2d'); } }
 });
 THEMES.festnight = { sky: ['#141b3f', '#1f2b5c', '#33447f'], far: '#2a3d5a', near: '#1f3346', top: '#4a9a3a', top2: '#2f6e2a', dirt: '#6b4a2b', dirt2: '#523820', plat: '#8a6036' };
