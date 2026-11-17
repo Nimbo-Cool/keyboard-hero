@@ -17470,7 +17470,8 @@ function dialog(lines) {
       const body = document.createElement('div'); body.style.flex = '1';
       body.innerHTML = `<div class="dn">${who ? (NPC_DEF[who] ? NPC_DEF[who].n : who === 'hero' ? esc(me.name) : '') : '📖 旁白'}</div><div class="dt" id="dt"></div><div class="dmore">▼ 按空白鍵或點一下</div>`;
       d.appendChild(body);
-      full = text; let k = 0; clearInterval(typing);
+      // 對話框是一個字一個字打出來的純文字：把 <b> 之類的標籤拿掉，不然會原封不動顯示出來
+      full = String(text).replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'); let k = 0; clearInterval(typing);
       typing = setInterval(() => { k += 2; if (!$('dt')) { clearInterval(typing); typing = null; return; } $('dt').textContent = full.slice(0, k); if (k % 6 === 0) SFX.talk(); if (k >= full.length) { clearInterval(typing); typing = null; } }, 30);
     };
     const next = () => {
