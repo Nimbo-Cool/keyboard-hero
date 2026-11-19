@@ -163,6 +163,8 @@ input,textarea{font-family:inherit;-webkit-user-select:text;user-select:text}
 .fade{animation:fadeout .3s forwards!important;pointer-events:none}
 @keyframes fadeout{to{transform:translateY(20px);opacity:0}}
 .shake{animation:shake .35s}
+.hintme{animation:hintme .5s 8 alternate;position:relative;z-index:2}
+@keyframes hintme{from{box-shadow:0 0 0 0 #ffd23f}to{box-shadow:0 0 0 5px #ffd23f,0 0 14px 6px #ffd23f}}
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .boom{position:absolute;font-size:20px;font-weight:900;pointer-events:none;z-index:30;animation:float .8s forwards;text-shadow:2px 2px 0 #fff}
 @keyframes float{to{transform:translateY(-40px);opacity:0}}
@@ -2057,7 +2059,24 @@ function later(fn, ms) { const c = W; const id = setTimeout(() => { if (c && c.a
 function every(fn, ms) { const c = W; const id = setInterval(() => { if (c && c.alive) fn(); }, ms); c.timers.push(id); return id; }
 function loop(fn) { const c = W; let last = performance.now(); const step = t => { if (!c.alive) return; const dt = Math.min(.05, (t - last) / 1000); last = t; fn(t, dt); requestAnimationFrame(step); }; requestAnimationFrame(step); }
 function killWave() { if (!W) return; W.alive = false; (W.kills || []).forEach(f => { try { f(); } catch (e) {} }); W.timers.forEach(id => { clearTimeout(id); clearInterval(id); }); W = null; }
-function setHud(t) { const el = $('hud'); if (el) el.textContent = t; }
+function setHud(t) { const el = $('hud'); if (el) { if (W && el.textContent !== String(t)) W.prog = performance.now(); el.textContent = t; } }
+// 卡關安全網：小遊戲 20 秒都沒有進度（題數沒變、沒有答對）就再提示一次；第二次用比較大的提示
+// 看影片、上課、自由畫畫、寫祝福、積木程式這些本來就會停下來想的，不提示
+let IDLE_MS = 20000;
+const IDLE_SKIP = ['video', 'lesson', 'paintFree', 'cardMsg', 'blocks', 'present', 'desktop'];
+function idleWatch(c, w) {
+  if (IDLE_SKIP.includes(w.type)) return;
+  c.prog = performance.now(); c.idleN = 0;
+  every(() => {
+    const now = performance.now();
+    if (document.hidden || $('modal').innerHTML || document.querySelector('.askbox') || UI.dialogOpen) { c.prog = Math.max(c.prog, now - IDLE_MS * .75); return; }
+    if (now - c.prog < IDLE_MS || now - (c.lastCoach || 0) < Math.min(8000, IDLE_MS)) return;
+    c.prog = now; c.lastCoach = now; c.idleN++;
+    const m = c.idleHint && c.idleHint();
+    if (m) { c.A.querySelectorAll('.coach').forEach(e => e.remove()); const el = document.createElement('div'); el.className = 'coach' + (c.idleN >= 2 ? ' strong' : ''); el.innerHTML = `<div class="ci">${c.idleN >= 2 ? '🧚' : '💡'}</div><div>${m}</div>`; c.A.appendChild(el); setTimeout(() => el.remove(), 6500); }
+    else coachHint(c.idleN >= 2 ? 2 : 1);
+  }, 1000);
+}
 function setTimer(t) { const el = $('timer'); if (el) el.textContent = t; }
 function clock(sec, onEnd) {
   const c = W, t0 = performance.now();
@@ -2071,6 +2090,7 @@ function runWave(w, A) {
     const ctx = newWave(); ctx.A = A; ctx.w = w; ctx.bad = 0; ctx.lastCoach = 0; let fin = false;
     A.innerHTML = '';
     WAVES[w.type](w, A, r => { if (fin || !ctx.alive) return; fin = true; killWave(); hideKbd(); res(r); });
+    if (ctx.alive && W === ctx) idleWatch(ctx, w);
   });
 }
 // ---------- 一直做錯時，跳出更清楚的提示 ----------
@@ -2083,7 +2103,8 @@ const COACH = {
   spell: () => '照著上面的注音，一個符號一個符號按，最後別忘了<b>聲調</b>。',
   monster: () => '先打怪物頭上單字的<b>第一個字母</b>鎖定牠，再把整個單字打完。',
   quiz: () => '不要急，<b>再讀一次題目</b>，把每個選項都看完再選。',
-  keytour: () => '先讀清楚題目要找哪一個鍵，看看畫面上<b>發亮的地方</b>。'
+  keytour: () => '先讀清楚題目要找哪一個鍵，看看畫面上<b>發亮的地方</b>。',
+  order: () => '<b>按住</b>一張卡片不放，拖到它該在的位置再放開，卡片會互換。全部排好按「✅ 排好了」。'
 };
 function coachHint(level) {
   const c = W; if (!c || !c.A || !c.A.isConnected) return;
@@ -2103,7 +2124,7 @@ function coachHint(level) {
 }
 function coachCount(ok) {
   const c = W; if (!c || !c.A) return;
-  if (ok) { c.bad = 0; return; }
+  if (ok) { c.bad = 0; c.prog = performance.now(); return; }
   c.bad++;
   const now = performance.now();
   if (now - c.lastCoach < 2500) return;
@@ -2433,6 +2454,7 @@ function paintUI(A, o) {
   S.doUndo = () => { if (!S.undo.length) { msg('沒有可以復原的步驟了'); return false; } S.cells = S.undo.pop(); draw(); if (o.onUndo) o.onUndo(); return true; };
   const msg = (t, cls = '') => { const m = $('pmsg'); if (m) { m.innerHTML = t; m.className = 'pmsg ' + cls; } };
   S.msg = msg;
+  S.hintTool = t => { const b = $('pt_' + t); if (!b) return; b.classList.remove('hintme'); void b.offsetWidth; b.classList.add('hintme'); };
   function draw() {
     for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) { g.fillStyle = S.cells[y][x]; g.fillRect(x * cell, y * cell, cell, cell); }
     g.strokeStyle = 'rgba(0,0,0,.06)'; g.lineWidth = 1;
@@ -2598,7 +2620,7 @@ WAVES.paintShape = (w, A, done) => {
     { t: 'ellipse', box: [17, 3, 29, 9], name: '用「◯ 橢圓」沿著虛線畫一朵雲' },
     { t: 'ellipse', box: [19, 11, 26, 18], square: true, name: '按住 <b>Shift</b> 不放，再用「◯ 橢圓」拖曳，畫出正圓形的球' }
   ];
-  let i = 0, tries = 0, scoreSum = 0, ended = false;
+  let i = 0, tries = 0, scoreSum = 0, ended = false, wrongAt = 0;
   const iou = (a, b) => { const ix = Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0]) + 1), iy = Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]) + 1); const I = ix * iy; const area = r => (r[2] - r[0] + 1) * (r[3] - r[1] + 1); return I / (area(a) + area(b) - I); };
   const S = paintUI(A, {
     title: '形狀練習', tools: ['pencil', 'rect', 'ellipse', 'eraser', 'undo'],
@@ -2609,6 +2631,17 @@ WAVES.paintShape = (w, A, done) => {
       if (t.t === 'rect') g.strokeRect(x0 * cell + cell / 2, y0 * cell + cell / 2, (x1 - x0) * cell, (y1 - y0) * cell);
       else { g.beginPath(); g.ellipse((x0 + x1 + 1) / 2 * cell, (y0 + y1 + 1) / 2 * cell, (x1 - x0 + 1) / 2 * cell, (y1 - y0 + 1) / 2 * cell, 0, 0, Math.PI * 2); g.stroke(); }
       g.restore();
+    },
+    onTool: (tl, S2) => {
+      const t = targets[i]; if (!t || tl === t.t) return;
+      if (tl === 'pencil' || tl === 'rect' || tl === 'ellipse') { S2.msg(`這題要用「${TOOLS[t.t][0]} ${TOOLS[t.t][1]}」喔！先點左邊發亮的「${TOOLS[t.t][1]}」。`, 'warn'); S2.hintTool(t.t); }
+    },
+    onStroke: S2 => {
+      const t = targets[i]; if (!t || S2.tool !== 'pencil') return;
+      const now = performance.now(); if (now - (wrongAt || 0) < 1500) return; wrongAt = now;
+      SFX.wrong(); if (typeof coachCount === 'function') coachCount(false);
+      S2.msg(`鉛筆畫不出${t.t === 'rect' ? '矩形' : '圓形'}！先點左邊發亮的「${TOOLS[t.t][0]} ${TOOLS[t.t][1]}」，再<b>從虛線左上角按住拖到右下角</b>。畫錯的地方可以按 Ctrl＋Z 復原，不扣分。`, 'warn');
+      S2.hintTool(t.t);
     },
     onShape: (p, S2) => {
       const t = targets[i]; if (!t) return;
@@ -2624,6 +2657,7 @@ WAVES.paintShape = (w, A, done) => {
       S2.draw();
     }
   });
+  W.idleHint = () => { const t = targets[i]; if (!t) return null; S.hintTool(t.t); return `${t.name}。<br>先點左邊發亮的「${TOOLS[t.t][1]}」，再<b>按住左鍵</b>從虛線的左上角拖到右下角放開。`; };
   S.msg(`第一題：${targets[0].name}（按住滑鼠左鍵從左上拖到右下）`);
   setHud(`📐 0 / ${targets.length}`);
   clock(w.limit || 150, () => { if (ended) return; ended = true; done({ score: scoreSum / targets.length, msg: `完成 ${i} 個形狀` }); });
@@ -2957,6 +2991,9 @@ WAVES.wordDoc = (w, A, done) => {
   rib.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     const c = b.dataset.c, s = b.dataset.s;
+    // 沒有先反白就按格式按鈕：什麼都不會變，學生會以為壞掉 → 直接提示
+    const sel = getSelection(), noSel = !sel || sel.isCollapsed || !doc.contains(sel.anchorNode);
+    if ((s || ['bold', 'italic', 'underline', 'red', 'size'].includes(c)) && noSel) { $('wsize').classList.add('hidden'); SFX.wrong(); toast('要先用滑鼠把字「反白」（按住左鍵拖過那些字），再按這個按鈕喔！', 3200); if (typeof coachCount === 'function') coachCount(false); return; }
     if (s) { document.execCommand('fontSize', false, s); $('wsize').classList.add('hidden'); setTimeout(check, 50); return; }
     if (c === 'size') { $('wsize').classList.toggle('hidden'); return; }
     if (c === 'save') { saved = true; savedBy = 'button'; toast('💾 已存檔（下次試試 Ctrl＋S，更快！）'); setTimeout(check, 50); return; }
@@ -2968,6 +3005,7 @@ WAVES.wordDoc = (w, A, done) => {
   doc.addEventListener('keyup', () => setTimeout(check, 30));
   doc.addEventListener('paste', e => e.preventDefault());
   W.onRaw = e => { if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') { e.preventDefault(); saved = true; savedBy = 'key'; toast('💾 Ctrl＋S 存檔成功！'); setTimeout(check, 50); } };
+  W.idleHint = () => { const st = steps[i]; return st ? `現在的任務：${st.say}${/粗體|斜體|底線|字級|紅字|放大|變大/.test(st.say) ? '<br>改格式要先用滑鼠把字<b>反白</b>，再按上面的按鈕。' : ''}` : null; };
   every(check, 400);
   show(); setTimeout(() => doc.focus(), 100);
   clock((w.limit || 240) * (w.slow || 1), () => { if (ended) return; ended = true; done({ score: i / steps.length * .8, msg: `完成 ${i} / ${steps.length} 個任務` }); });
@@ -16312,7 +16350,7 @@ function xqGame(o) {
       <div class="xqbar"><i id="xqBar${s}"></i></div><em id="xqSec${s}"></em></div></div><div class="xqcap" id="xqCap${s}"></div>`;
     let capKey = -1, ended = false, phase = 'wait', sel = null, dots = [], last = null, anim = null, checkAt = null, turnT = 0, thinking = false, raf = 0, warned = false, away = 0;
     const frozen = () => net && (away > 0 || (!watch && tbNet.conn === false));
-    const pend = {};
+    const pend = {}, pendT = {}; let turnAt = o.turnAt || 0;   // turnAt：這一手從伺服器時間幾點開始算（觀戰、接回來時跟下棋的人同步）
     const view = () => ({ b: st.b, flip, sel, dots, last, check: checkAt, anim });
     const status = () => {
       const who = st.turn, el = $('xqStat'); if (!el) return;
@@ -16340,6 +16378,7 @@ function xqGame(o) {
       const f = (m / 100) | 0, p = st.b[f], ply = st.ply, r = xqPlay(st, m);
       if (!r) return false;
       if (net && local) o.net.move(ply, m);
+      turnAt = !local && pendT[ply] ? pendT[ply] : 0;
       sel = null; dots = []; last = m; thinking = false;
       anim = { from: f, to: m % 100, p, k: 0, t0: performance.now(), cap: r.cap !== '.', check: r.check };
       xqThud(false);
@@ -16355,7 +16394,7 @@ function xqGame(o) {
     const startTurn = () => {
       if (ended) return;
       if (st.over >= 0) return finish('end');
-      phase = 'play'; turnT = 0; warned = false;
+      phase = 'play'; turnT = watch ? netAge(turnAt) : Math.min(netAge(turnAt), Math.max(0, tl - 10)); turnAt = 0; warned = false;
       const who = st.turn;
       if (watch || (!duo && who !== mySide)) {
         if (!net) {
@@ -16397,7 +16436,7 @@ function xqGame(o) {
     window.__xq = { st, side: mySide, phase: () => phase, anim: () => !!anim, move: m => human(st.turn) && doMove(m, true), finish: w => finish(w) };
     // ===== 連線 =====
     if (net) {
-      o.net.onMove = (ply, m) => { if (ply < st.ply || pend[ply] != null) return; pend[ply] = m; if (ply === st.ply && (watch || st.turn !== mySide) && phase === 'play' && !anim) doMove(m, false); };
+      o.net.onMove = (ply, m, t) => { if (ply < st.ply || pend[ply] != null) return; pend[ply] = m; pendT[ply] = t || 0; if (ply === st.ply && (watch || st.turn !== mySide) && phase === 'play' && !anim) doMove(m, false); };
       o.net.onLeave = r => { if (!ended) { msg(r ? '對手認輸了' : '對手離開了', 0); finish(r ? 'oppResign' : 'leave'); } };
       o.net.onEnd = (k, i) => { if (ended) return; endText = k === 'draw' ? '和棋！<small>雙方同意和局</small>' : k === 'resign' ? `${esc(names[i])} 認輸了<small>${esc(names[1 - i])} 贏了！</small>` : k === 'leave' ? `${esc(names[i])} 離開了<small>${esc(names[1 - i])} 贏了！</small>` : '這一局結束了'; finish('wend'); };
       bgNetUI(o, { ended: () => ended, finish, msg, away: n => { away = n; status(); } });
@@ -16463,6 +16502,9 @@ function xqGame(o) {
 
 // ---------- 連線共用 ----------
 const NET_GRACE = 15;   // 對手斷線後，等他回來的秒數
+// 伺服器時間 t（毫秒）到現在過了幾秒；離線版沒有 tbNet 就當 0
+function netAge(t) { if (!t) return 0; const off = typeof tbNet !== 'undefined' ? tbNet.off || 0 : 0; return Math.max(0, (Date.now() + off - t) / 1000); }
+const netNow = () => Math.round(Date.now() + (typeof tbNet !== 'undefined' ? tbNet.off || 0 : 0));
 // 等對手回來：連線消失後開始倒數，回來就取消；時間到才算離開
 function netGrace(onAway, onBack, onGone) {
   let t = 0, left = 0;
@@ -16484,7 +16526,7 @@ function xqNet(base, uid, opp, host) {
   if (tbNet.onConn) subs.push(tbNet.onConn(arm));
   const G = netGrace(s => N.onAway && N.onAway(s), () => N.onBack && N.onBack(), () => { if (!N.ended && N.onLeave) N.onLeave(false); });
   subs.push(() => G.stop());
-  subs.push(D.onChildAdded(D.ref(db, `${base}/m`), s => { const v = s.val(); if (v && v.by !== uid && N.onMove && !N.ended) N.onMove(Number(s.key), Number(v.m)); }));
+  subs.push(D.onChildAdded(D.ref(db, `${base}/m`), s => { const v = s.val(); if (v && v.by !== uid && N.onMove && !N.ended) N.onMove(Number(s.key), Number(v.m), Number(v.t) || 0); }));
   subs.push(D.onValue(D.ref(db, `${base}/on/${opp}`), s => { if (s.val()) { N.seen = true; G.back(); } else if (N.seen && !N.ended) G.lost(); }));
   subs.push(D.onValue(D.ref(db, `${base}/bye/${opp}`), s => { const v = s.val(); if (v && !N.ended && N.onLeave) N.onLeave(v === 'r'); }));
   // 求和：dr/<我> = 第幾次提議；對手不同意寫 dr/no/<對手> = 那一次的編號；同意寫 dr/ok
@@ -16495,7 +16537,7 @@ function xqNet(base, uid, opp, host) {
     const a = Number(v[opp]) || 0; if (a > askSeen) { askSeen = a; N.onDraw('ask'); }
     const no = Number(v.no && v.no[opp]) || 0; if (no && no === myN && no !== noSeen) { noSeen = no; N.onDraw('no'); }
   }));
-  N.move = (ply, m) => D.set(D.ref(db, `${base}/m/${ply}`), { by: uid, m });
+  N.move = (ply, m) => D.set(D.ref(db, `${base}/m/${ply}`), { by: uid, m, t: netNow() });
   N.draw = n => { myN = n; D.set(D.ref(db, `${base}/dr/${uid}`), n); };
   N.drawAns = yes => { if (yes) D.set(D.ref(db, `${base}/dr/ok`), true); else D.update(D.ref(db, `${base}/dr`), { [`no/${uid}`]: askSeen, [opp]: null }); };
   N.finish = (quit, why) => {
@@ -16511,7 +16553,7 @@ function xqNet(base, uid, opp, host) {
 function xqWatchNet(base, uids) {
   const D = tbNet.D, db = tbNet.db, N = { onMove: null, onEnd: null, ended: false, watch: true };
   const subs = [];
-  subs.push(D.onChildAdded(D.ref(db, `${base}/m`), s => { const v = s.val(); if (v && N.onMove && !N.ended) N.onMove(Number(s.key), Number(v.m)); }));
+  subs.push(D.onChildAdded(D.ref(db, `${base}/m`), s => { const v = s.val(); if (v && N.onMove && !N.ended) N.onMove(Number(s.key), Number(v.m), Number(v.t) || 0); }));
   subs.push(D.onValue(D.ref(db, `${base}/end`), s => {
     const v = s.val(); if (!v || N.ended || !N.onEnd) return;
     const i = uids.indexOf(v.by), other = 1 - i;
@@ -16933,7 +16975,7 @@ function acGame(o) {
       <div class="xqbar"><i id="xqBar${s}"></i></div><em id="xqSec${s}"></em></div></div><div class="xqcap" id="xqCap${s}"></div>`;
     let capKey = -1, colKey = -1, ended = false, phase = 'wait', sel = null, dots = [], anim = null, turnT = 0, thinking = false, raf = 0, away = 0, endText = '';
     const frozen = () => net && (away > 0 || (!watch && tbNet.conn === false));
-    const pend = {};
+    const pend = {}, pendT = {}; let turnAt = o.turnAt || 0;   // turnAt：這一手從伺服器時間幾點開始算（觀戰、接回來時跟下棋的人同步）
     const human = pl => !watch && pl === me0;
     const view = () => ({ b: st.b, hid: st.hid, flip, sel, dots, last: st.last, anim });
     const status = () => {
@@ -16969,6 +17011,7 @@ function acGame(o) {
       const ply = st.ply, f = m >= ACQ.FLIP ? -1 : (m / 100) | 0, t = m >= ACQ.FLIP ? m - ACQ.FLIP : m % 100, p0 = f >= 0 ? st.b[f] : null, r = acPlay(st, m);
       if (!r) return false;
       if (net && local) o.net.move(ply, m);
+      turnAt = !local && pendT[ply] ? pendT[ply] : 0;
       sel = null; dots = []; thinking = false;
       const far = f >= 0 && Math.abs((f >> 3) - (t >> 3)) + Math.abs((f & 7) - (t & 7)) > 1;
       anim = { flip: r.flip >= 0, from: f, to: t, p: p0 || r.p, k: 0, t0: performance.now(), cap: r.cap !== '.', far, dur: r.flip >= 0 ? 320 : far ? 330 : 220 };
@@ -16979,7 +17022,7 @@ function acGame(o) {
     const startTurn = () => {
       if (ended) return;
       if (st.over >= 0) return finish('end');
-      phase = 'play'; turnT = 0;
+      phase = 'play'; turnT = watch ? netAge(turnAt) : Math.min(netAge(turnAt), Math.max(0, tl - 10)); turnAt = 0;
       const who = st.turn;
       if (watch || who !== me0) {
         if (!net) { thinking = true; const ply = st.ply; setTimeout(() => { if (ended || st.ply !== ply) return; let m = null; try { m = acCpu(st, o.level || 0); } catch (e) { console.warn(e); } if (m == null) m = acMoves(st)[0]; doMove(m, false); }, 550 + Math.random() * 350); }
@@ -17017,7 +17060,7 @@ function acGame(o) {
     raf = requestAnimationFrame(loop);
     window.__ac = { st, side: me0, phase: () => phase, anim: () => !!anim, move: m => human(st.turn) && doMove(m, true), finish: w => finish(w) };
     if (net) {
-      o.net.onMove = (ply, m) => { if (ply < st.ply || pend[ply] != null) return; pend[ply] = m; if (ply === st.ply && (watch || st.turn !== me0) && phase === 'play' && !anim) doMove(m, false); };
+      o.net.onMove = (ply, m, t) => { if (ply < st.ply || pend[ply] != null) return; pend[ply] = m; pendT[ply] = t || 0; if (ply === st.ply && (watch || st.turn !== me0) && phase === 'play' && !anim) doMove(m, false); };
       o.net.onLeave = r => { if (!ended) { msg(r ? '對手認輸了' : '對手離開了', 0); finish(r ? 'oppResign' : 'leave'); } };
       o.net.onEnd = (k, i) => { if (ended) return; endText = k === 'draw' ? '和局！<small>雙方同意和局</small>' : k === 'resign' ? `${esc(names[i])} 認輸了<small>${esc(names[1 - i])} 贏了！</small>` : k === 'leave' ? `${esc(names[i])} 離開了<small>${esc(names[1 - i])} 贏了！</small>` : '這一局結束了'; finish('wend'); };
       bgNetUI(o, { ended: () => ended, finish, msg, away: n => { away = n; status(); } });
@@ -17316,7 +17359,7 @@ function jqGame(o) {
       <div class="xqbar"><i id="xqBar${s}"></i></div><em id="xqSec${s}"></em></div></div><div class="jqhome" id="jqHome${s}"></div>`;
     let homeKey = -1, ended = false, phase = 'wait', sel = null, dots = {}, lastPath = null, anim = null, turnT = 0, thinking = false, raf = 0, away = 0, endText = '';
     const frozen = () => net && (away > 0 || (!watch && tbNet.conn === false));
-    const pend = {};
+    const pend = {}, pendT = {}; let turnAt = o.turnAt || 0;   // turnAt：這一手從伺服器時間幾點開始算（觀戰、接回來時跟下棋的人同步）
     const human = s => !watch && s === mySide;
     const view = () => ({ st, flip, sel, dots, lastPath, anim });
     const status = () => {
@@ -17343,6 +17386,7 @@ function jqGame(o) {
       const f = (m / 1000) | 0, side = st.turn, ply = st.ply, path = jqPlay(st, m);
       if (!path) return false;
       if (net && local) o.net.move(ply, m);
+      turnAt = !local && pendT[ply] ? pendT[ply] : 0;
       sel = null; dots = {}; thinking = false; lastPath = [f].concat(path);
       anim = { path: lastPath, to: m % 1000, side, k: 0, t0: performance.now(), per: path.length > 1 ? 170 : 200 };
       beep(520, .04, 'square', .03);
@@ -17352,7 +17396,7 @@ function jqGame(o) {
     const startTurn = () => {
       if (ended) return;
       if (st.over >= 0) return finish('end');
-      phase = 'play'; turnT = 0;
+      phase = 'play'; turnT = watch ? netAge(turnAt) : Math.min(netAge(turnAt), Math.max(0, tl - 10)); turnAt = 0;
       const who = st.turn;
       if (watch || who !== mySide) {
         if (!net) { thinking = true; const ply = st.ply; setTimeout(() => { if (ended || st.ply !== ply) return; let m = null; try { m = jqCpu(st, o.level || 0); } catch (e) { console.warn(e); } if (m == null) m = jqMoves(st)[0]; if (m != null) doMove(m, false); }, 450 + Math.random() * 300); }
@@ -17388,7 +17432,7 @@ function jqGame(o) {
     raf = requestAnimationFrame(loop);
     window.__jq = { st, side: mySide, phase: () => phase, anim: () => !!anim, move: m => human(st.turn) && doMove(m, true), finish: w => finish(w) };
     if (net) {
-      o.net.onMove = (ply, m) => { if (ply < st.ply || pend[ply] != null) return; pend[ply] = m; if (ply === st.ply && (watch || st.turn !== mySide) && phase === 'play' && !anim) doMove(m, false); };
+      o.net.onMove = (ply, m, t) => { if (ply < st.ply || pend[ply] != null) return; pend[ply] = m; pendT[ply] = t || 0; if (ply === st.ply && (watch || st.turn !== mySide) && phase === 'play' && !anim) doMove(m, false); };
       o.net.onLeave = r => { if (!ended) { msg(r ? '對手認輸了' : '對手離開了', 0); finish(r ? 'oppResign' : 'leave'); } };
       o.net.onEnd = (k, i) => { if (ended) return; endText = k === 'draw' ? '平手！<small>雙方同意和局</small>' : k === 'resign' ? `${esc(names[i])} 認輸了<small>${esc(names[1 - i])} 贏了！</small>` : k === 'leave' ? `${esc(names[i])} 離開了<small>${esc(names[1 - i])} 贏了！</small>` : '這一局結束了'; finish('wend'); };
       bgNetUI(o, { ended: () => ended, finish, msg, away: n => { away = n; status(); } });
