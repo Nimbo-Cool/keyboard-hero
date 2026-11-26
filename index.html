@@ -438,6 +438,7 @@ select{font-family:inherit;font-size:16px;font-weight:800;border:3px solid var(-
 .traits{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
 .traits span{font-size:12px;font-weight:900;background:#2a1f33;color:#ffe3a3;border:2px solid #0d0912;padding:0 5px}
 .elite{filter:sepia(1) saturate(5) hue-rotate(-10deg) brightness(1.15) drop-shadow(0 0 6px #ffd23f)}
+.forbidm{filter:brightness(.55) saturate(1.6) hue-rotate(220deg) drop-shadow(0 0 10px #7a1fd1) drop-shadow(0 0 4px #ff3b6b);animation:forbidGlow 1s ease-in-out infinite}@keyframes forbidGlow{50%{filter:brightness(.7) saturate(2) hue-rotate(220deg) drop-shadow(0 0 18px #b01fff) drop-shadow(0 0 6px #ff3b6b)}}
 .legendm{filter:saturate(2.2) hue-rotate(250deg) brightness(1.2) drop-shadow(0 0 8px #c86bff) drop-shadow(0 0 3px #fff);animation:legendGlow 1.2s ease-in-out infinite}@keyframes legendGlow{50%{filter:saturate(2.6) hue-rotate(250deg) brightness(1.35) drop-shadow(0 0 14px #e0a8ff) drop-shadow(0 0 4px #fff)}}
 .fog{position:absolute;inset:0;z-index:15;background:radial-gradient(circle,#c9c3d6 0%,#8f88a3 70%);display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:#fff;text-shadow:3px 3px 0 #3b2a5a;pointer-events:none;transition:opacity .4s}
 .fog.clear{opacity:0}
@@ -765,7 +766,10 @@ const WEAPONS = {
   whammer: { n: '木槌', kind: 'hammer', atk: 5, price: 70 },
   ihammer: { n: '大鐵錘', kind: 'hammer', atk: 8, price: 170 },
   wboom: { n: '木頭迴力鏢', kind: 'boomerang', atk: 4, price: 60 },
-  sboom: { n: '星光迴力鏢', kind: 'boomerang', atk: 7, price: 160 }
+  sboom: { n: '星光迴力鏢', kind: 'boomerang', atk: 7, price: 160 },
+  pbow: { n: '秉亨老師弓', kind: 'bow', atk: 20, price: 9999, perk: 'teach' },   // 完美命中多 10%，可以強化
+  shalun: { n: '沙崙之劍', kind: 'sword', atk: 9999, price: 99999, noUp: true },   // 鎮店之寶，不能強化
+  likeb: { n: 'LIKE迴力鏢', kind: 'boomerang', atk: 10, price: 999, perk: 'like' }   // 學生點子：完美命中按讚，大絕招能量多 10
 };
 const KIND = {
   sword: { n: '劍', icon: '🗡️', how: '滑鼠點擊攻擊', good: '史萊姆、蘑菇怪' },
@@ -782,6 +786,7 @@ const ITEMS = {
   bomb: { n: '雷電卷軸', icon: '⚡', price: 40, desc: '直接造成 15 點傷害' }
 };
 const maxHp = p => 30 + (p.lv - 1) * 6;
+const FORBID_P = .01;   // 禁忌怪物出現機率
 // 傳說篇等級沒有上限，後期升級需要的經驗會慢慢變多
 const expNeed = p => p.grade === 7 ? Math.round(15 * p.lv + .3 * p.lv * p.lv) : 15 * p.lv;
 
@@ -4208,11 +4213,14 @@ async function startBattle(m) {
   const M = monStats(m.kind);
   // 稀有度：傳說 3%，黃金（一般地圖 6%，特殊地圖照地圖設定打六折），其他是一般怪
   // 第一次戰鬥（教學）一定是一般怪；3 級以前不會遇到傳說怪，免得新手被嚇到
-  const first = !me.flags.tutBattle, roll = first ? 1 : Math.random(), legend = !M.boss && me.lv >= 3 && roll < .03;
-  const elite = legend || (!M.boss && roll < .03 + ((world.A && world.A.elite) ? world.A.elite * .6 : .06));
-  const hp = Math.round(M.hp * (legend ? 2.3 : elite ? 1.6 : 1));
-  const st = B.st = { m, M, hp, max: hp, turn: 0, slow: 1, over: false, elite, legend, traits: MON_TRAITS[m.kind] || [], energy: WEAPONS[me.eq] && WEAPONS[me.eq].perk === 'ready' ? 20 : 0, combo: 0, rage: false, atkBonus: legend ? 3 : elite ? 2 : 0 };
-  const name = (legend ? '🌟傳說' : elite ? '✨黃金' : '') + M.n;
+  const first = !me.flags.tutBattle, roll = first ? 1 : Math.random();
+  // 禁忌怪物：1%，5 級以上、不是魔王、不是劇情指定的怪才會出現（另外抽，不影響黃金和傳說的機率）
+  const forbid = !first && !M.boss && !m.flag && me.lv >= 5 && !(world.A && world.A.fest) && Math.random() < FORBID_P;
+  const legend = !forbid && !M.boss && me.lv >= 3 && roll < .03;
+  const elite = !forbid && (legend || (!M.boss && roll < .03 + ((world.A && world.A.elite) ? world.A.elite * .6 : .06)));
+  const hp = Math.round(M.hp * (forbid ? 20 : legend ? 2.3 : elite ? 1.6 : 1));
+  const st = B.st = { m, M, hp, max: hp, turn: 0, slow: 1, over: false, elite, legend, forbid, traits: MON_TRAITS[m.kind] || [], energy: WEAPONS[me.eq] && WEAPONS[me.eq].perk === 'ready' ? 20 : 0, combo: 0, rage: false, atkBonus: forbid ? Math.round(M.atk * .8) + 5 : legend ? 3 : elite ? 2 : 0 };
+  const name = (forbid ? '😈禁忌' : legend ? '🌟傳說' : elite ? '✨黃金' : '') + M.n;
   st.name = name;
   if (M.boss) SFX.boss(); else SFX.swing();
   const heroImg = scaled(heroSprites(me.look).stand.r, 4);
@@ -4233,9 +4241,10 @@ async function startBattle(m) {
   $('bhero').appendChild(heroImg);
   $('bmon').appendChild(monFlip);
   heroImg.id = 'bhimg'; monFlip.id = 'bmimg';
-  if (legend) monFlip.classList.add('legendm'); else if (elite) monFlip.classList.add('elite');
+  if (forbid) monFlip.classList.add('forbidm'); else if (legend) monFlip.classList.add('legendm'); else if (elite) monFlip.classList.add('elite');
   updBars();
-  await say(M.boss ? `👑 ${name} 出現了！` : legend ? `🌟 超級稀有的${name}出現了！血很厚，打倒牠有大獎勵！` : elite ? `✨ 稀有的${name}出現了！打倒牠會掉寶物！` : `${name} 出現了！`, 1000);
+  if (forbid) anim('bscene', 'bigshake');
+  await say(M.boss ? `👑 ${name} 出現了！` : forbid ? `😈 傳說中的${name}出現了！牠強得不像話……打不過要記得「逃跑」！` : legend ? `🌟 超級稀有的${name}出現了！血很厚，打倒牠有大獎勵！` : elite ? `✨ 稀有的${name}出現了！打倒牠會掉寶物！` : `${name} 出現了！`, 1000);
   if (st.traits.length && !me.flags['seen_' + m.kind]) { me.flags['seen_' + m.kind] = 1; await say(`${M.n}的特性：${st.traits.map(t => `${TRAITS[t].n}（${TRAITS[t].d}）`).join('、')}`, 2600); }
   if (!me.flags.tutBattle) { me.flags.tutBattle = 1; await say('戰鬥教學：用滑鼠點「⚔️ 攻擊」，再完成挑戰。挑戰做得越好，傷害越高！', 2600); }
   if (!me.flags.tutSkill) { me.flags.tutSkill = 1; await say('小提示：挑戰做得好會累積<b style="color:#8ad0ff">藍色能量</b>，集滿可以放「✨ 大絕招」！', 2600); }
@@ -4305,7 +4314,8 @@ async function heroAttack(skill) {
   if (wpn.kind === 'boomerang' && M.fly) { mult *= 1.3; notes.push('🪃 打中會飛的怪！'); }
   const first = wpn.kind === 'spear' && st.hp >= st.max;   // 長槍：怪物還沒受傷時，第一擊特別痛
   if (mods.includes('fire')) mult *= 1.2;
-  if (wpn.perk === 'spark') mult *= 1.1;   // 節日武器的小加成（見 festw.js）：都只比同級武器好一點點
+  if (wpn.perk === 'spark') mult *= 1.1;
+  if (wpn.perk === 'teach' && perf >= .99) { mult *= 1.1; notes.push('🏹 老師的叮嚀！'); }   // 節日武器的小加成（見 festw.js）：都只比同級武器好一點點
   if (perf >= .99) { st.combo++; if (st.combo > 1) { mult *= 1 + (wpn.kind === 'whip' ? Math.min(.8, (st.combo - 1) * .2) : Math.min(.5, (st.combo - 1) * .1)); notes.push(`🔥 ${st.combo} 連續完美！`); } } else st.combo = 0;
   if (first && perf > 0) { mult *= 1.4; notes.push('🔱 先制突刺！'); }
   const crit = perf >= .99 && Math.random() < (mods.includes('crit') ? .6 : wpn.perk === 'keen' ? .45 : .35);
@@ -4315,6 +4325,7 @@ async function heroAttack(skill) {
   if (perf > 0 && perf < .9) notes.push('手滑了幾次，傷害變低了');
   const dmg = perf <= 0 ? 0 : Math.max(1, Math.round(atk * (skill ? 1 + 3 * pf : .3 + 1.7 * pf) * mult));
   if (!skill) st.energy = Math.min(100, st.energy + Math.round(perf * (wpn.kind === 'cannon' ? 50 : 30)));   // 魔導砲：集氣特別快
+  if (wpn.perk === 'like' && perf >= .99 && !skill) { st.energy = Math.min(100, st.energy + 10); notes.push('👍 LIKE！'); }
   anim('bhimg', 'lunge'); SFX.swing(); await sleep(200);
   if (dmg && mods.includes('vamp') && me.hp < maxHp(me)) { const h = Math.max(1, Math.round(dmg * .15)); me.hp = Math.min(maxHp(me), me.hp + h); floatDmg('bhimg', '+' + h, true); notes.push(`🩸 吸血 +${h}`); }
   if (dmg && wpn.perk === 'heal' && me.hp < maxHp(me)) { me.hp++; floatDmg('bhimg', '+1', true); notes.push('💚 回復 1 點血'); }
@@ -4411,12 +4422,14 @@ async function endBattle(result) {
   if (result === 'win') {
     m.dead = true; SFX.win();
     $('bmimg').style.transition = 'opacity .6s'; $('bmimg').style.opacity = 0;
-    const mul = st.legend ? 4 : st.elite ? 2.5 : 1, pk = WEAPONS[me.eq].perk, more = v => v > 0 ? Math.max(v + 1, Math.round(v * 1.15)) : v,
+    const mul = st.forbid ? 12 : st.legend ? 4 : st.elite ? 2.5 : 1, pk = WEAPONS[me.eq].perk, more = v => v > 0 ? Math.max(v + 1, Math.round(v * 1.15)) : v,
       gold = pk === 'lucky' ? more(Math.round(M.gold * mul)) : Math.round(M.gold * mul), exp = pk === 'wise' ? more(Math.round(M.exp * mul)) : Math.round(M.exp * mul);
     me.gold += gold;
     await say(`打倒了 ${st.name}！獲得 ${exp} 經驗值、${gold} 金幣 🪙`, 1500);
     const drop = rollDrop(st) || (pk === 'gift' && !M.boss && Math.random() < .2 ? 'potion' : null);
     if (drop) { me.items[drop] = (me.items[drop] || 0) + 1; SFX.coin(); await say(`🎁 ${st.name}掉下了 ${ITEMS[drop].icon} ${ITEMS[drop].n}！`, 1300); }
+    if (st.forbid) { ['meal', 'bomb', 'hourglass'].forEach(k => me.items[k] = (me.items[k] || 0) + 1); me.items.potion = (me.items.potion || 0) + 3; SFX.level(); await say('😈 禁忌的寶箱：🍱 勇者便當、⚡ 雷電卷軸、⏳ 時光沙漏各一個，再加 🧪 補血藥水 3 瓶！', 2000);
+      if (typeof rollWeapon === 'function' && me.grade === 7) { const it = rollWeapon(me.lv, true); await say(`🎁 還掉下了 ${wName(it.id)}！`, 1600); } }
     if (PACK.onWin) await PACK.onWin(st);
     if (gainExp(exp)) await say(`⭐ 等級提升！現在是 Lv${me.lv}，HP 全滿、攻擊力變強了！`, 1800);
     if (m.flag) me.flags[m.flag] = 1;
@@ -4765,7 +4778,7 @@ async function talkGeneric(id) {
 }
 async function onKill(kind, st) {
   ensureExtra(me);
-  me.dex[kind] = (me.dex[kind] || 0) + 1; if (st && st.elite) { me.dex[kind + '*'] = 1; addStat('golds'); } if (st && st.legend) { me.dex[kind + '!'] = 1; addStat('legends'); }
+  me.dex[kind] = (me.dex[kind] || 0) + 1; if (st && st.elite) { me.dex[kind + '*'] = 1; addStat('golds'); } if (st && st.legend) { me.dex[kind + '!'] = 1; addStat('legends'); } if (st && st.forbid) { me.dex[kind + '~'] = 1; addStat('forbids'); }
   bountyEvent('kill', kind); addStat('kills');
   if (await onHiddenKill(kind)) return;
   sideKill(kind);
@@ -4804,6 +4817,7 @@ const ACH = [
   { id: 'kill30', n: '⚔️ 小小勇者', d: '打倒 30 隻怪物', ok: p => p.stat.kills >= 30 },
   { id: 'kill100', n: '🗡️ 怪物剋星', d: '打倒 100 隻怪物', ok: p => p.stat.kills >= 100 },
   { id: 'gold5', n: '✨ 黃金獵人', d: '打倒 5 隻黃金稀有怪', ok: p => p.stat.golds >= 5 },
+  { id: 'forbid1', n: '😈 禁忌獵人', d: '打倒 1 隻禁忌怪物（每場只有 1% 會遇到，非常非常強）', ok: p => (p.stat.forbids || 0) >= 1 },
   { id: 'legend1', n: '🌟 傳說獵人', d: '打倒 1 隻傳說怪物（非常少見喔！）', ok: p => (p.stat.legends || 0) >= 1 },
   { id: 'chest15', n: '🧰 寶箱獵人', d: '打開 15 個寶箱', ok: p => p.stat.chests >= 15 },
   { id: 'skill10', n: '🌟 絕招達人', d: '放出 10 次大絕招', ok: p => p.stat.skills >= 10 },
@@ -4905,13 +4919,13 @@ async function openBoard() {
 // ---------- 武器強化 ----------
 const upCost = lv => 40 + lv * 45;
 function upgradeHtml() {
-  return `<h3>⚒️ 武器強化（每 +1 攻擊力多 1，最高 +5）</h3><div class="grid2">${me.weapons.map(id => {
+  return `<h3>⚒️ 武器強化（每 +1 攻擊力多 1，最高 +5）</h3><div class="grid2">${me.weapons.filter(id => WEAPONS[id] && !WEAPONS[id].noUp).map(id => {
     const lv = me.wlv[id] || 0, w = WEAPONS[id];
     return `<div class="icard"><div class="in">${KIND[w.kind].icon} ${w.n} ${lv ? `<span style="color:#b47d26">+${lv}</span>` : ''}</div><div class="id">攻擊 ${wAtk(id)}</div>
       ${lv >= 5 ? '<b>🔥 已經強化到最高了！</b>' : `<button class="pbtn small blue" ${me.gold < upCost(lv) ? 'disabled' : ''} onclick="upgradeW('${id}')">🪙 ${upCost(lv)} 強化到 +${lv + 1}</button>`}</div>`; }).join('')}</div>`;
 }
 function upgradeW(id) {
-  const lv = me.wlv[id] || 0; if (lv >= 5 || me.gold < upCost(lv)) return;
+  const lv = me.wlv[id] || 0; if (WEAPONS[id].noUp || lv >= 5 || me.gold < upCost(lv)) return;
   me.gold -= upCost(lv); me.wlv[id] = lv + 1; saveMe(); updateHUD();
   SFX.level(); toast(`⚒️ 鏘鏘！${WEAPONS[id].n} 強化成功 +${lv + 1}`); checkAch(); openShop('weapon');
 }
@@ -17580,7 +17594,7 @@ function openBag() {
   openModal(`<div class="mtitle">🎒 背包 <button class="pbtn small gray" style="margin-left:auto" onclick="closeModal()">關閉</button></div>
     <div style="font-weight:900;margin-bottom:8px">${esc(me.name)}　Lv${me.lv}　HP ${me.hp}/${maxHp(me)}　攻擊力 ${wAtk(me.eq) + me.lv - 1}　🪙 ${me.gold}</div>
     <h3>武器（點一下裝備）</h3><div class="grid2">${me.weapons.map(id => { const w = WEAPONS[id], K = KIND[w.kind]; return `<div class="icard ${id === me.eq ? 'eq' : ''}">
-      <div class="in">${K.icon} ${typeof wName === 'function' ? wName(id) : w.n}${me.wlv[id] ? ` <span style="color:#b47d26">+${me.wlv[id]}</span>` : ''}　攻擊 ${wAtk(id)}</div><div class="id">${K.n}：${K.how}<br>擅長打：${K.good}${w.perk && typeof FEST_PERK !== 'undefined' ? `<br><b style="color:#b4532a">節日加成：${FEST_PERK[w.perk]}</b>` : ''}${w.mods && w.mods.length ? `<br>詞綴：${w.mods.map(m => AFFIX[m][0] + '（' + AFFIX[m][1] + '）').join('、')}` : ''}</div>
+      <div class="in">${K.icon} ${typeof wName === 'function' ? wName(id) : w.n}${me.wlv[id] ? ` <span style="color:#b47d26">+${me.wlv[id]}</span>` : ''}　攻擊 ${wAtk(id)}</div><div class="id">${K.n}：${K.how}<br>擅長打：${K.good}${w.perk && typeof FEST_PERK !== 'undefined' && FEST_PERK[w.perk] ? `<br><b style="color:#b4532a">節日加成：${FEST_PERK[w.perk]}</b>` : ''}${W_NOTE[id] ? `<br><b style="color:#b4532a">${W_NOTE[id]}</b>` : ''}${w.mods && w.mods.length ? `<br>詞綴：${w.mods.map(m => AFFIX[m][0] + '（' + AFFIX[m][1] + '）').join('、')}` : ''}</div>
       ${id === me.eq ? '<b>✅ 使用中</b>' : `<button class="pbtn small" onclick="equip('${id}')">裝備</button>${w.inst ? ` <button class="pbtn small gray" onclick="salvage('${id}')">分解</button>` : ''}`}</div>`; }).join('')}</div>
     <h3>道具</h3><div class="grid2">${Object.keys(ITEMS).map(k => `<div class="icard"><div class="in">${ITEMS[k].icon} ${ITEMS[k].n} ×${me.items[k] || 0}</div><div class="id">${ITEMS[k].desc}</div>
       ${(k === 'potion' || k === 'meal') && me.items[k] ? `<button class="pbtn small green" onclick="useOutside('${k}')">使用</button>` : ''}</div>`).join('')}</div>
@@ -17674,9 +17688,10 @@ function openSettings() {
 }
 function openShop(type) {
   world.active = false;
+  ['likeb', 'pbow', 'shalun'].forEach(id => { if (!WEAPON_ORDER.includes(id)) WEAPON_ORDER.push(id); if (PACK.shop && !PACK.shop.includes(id)) PACK.shop.push(id); });
   const body = type === 'weapon'
     ? WEAPON_ORDER.filter(id => WEAPONS[id].price > 0 && (PACK.shop ? PACK.shop.includes(id) : !WEAPONS[id].legend)).map(id => { const w = WEAPONS[id], K = KIND[w.kind], own = me.weapons.includes(id);
-        return `<div class="icard ${own ? 'eq' : ''}"><div class="in">${K.icon} ${w.n}　攻擊 ${w.atk}</div><div class="id">${K.n}：${K.how}<br>擅長打：${K.good}</div>
+        return `<div class="icard ${own ? 'eq' : ''}"><div class="in">${K.icon} ${w.n}　攻擊 ${w.atk}</div><div class="id">${K.n}：${K.how}<br>擅長打：${K.good}${W_NOTE[id] ? `<br><b style="color:#b4532a">${W_NOTE[id]}</b>` : ''}</div>
           ${own ? '<b>✅ 已擁有</b>' : `<button class="pbtn small" ${me.gold < w.price ? 'disabled' : ''} onclick="buy('w','${id}')">🪙 ${w.price} 購買</button>`}</div>`; }).join('')
     : Object.keys(ITEMS).map(k => `<div class="icard"><div class="in">${ITEMS[k].icon} ${ITEMS[k].n}（有 ${me.items[k] || 0} 個）</div><div class="id">${ITEMS[k].desc}</div>
         <button class="pbtn small" ${me.gold < ITEMS[k].price ? 'disabled' : ''} onclick="buy('i','${k}')">🪙 ${ITEMS[k].price} 購買</button></div>`).join('');
@@ -17684,6 +17699,7 @@ function openShop(type) {
     <div class="grid2">${body}</div>${type === 'weapon' ? '<p style="font-weight:800">買了新武器記得到「🎒 背包」裝備，或戰鬥中按「🔄 換武器」。</p>' + upgradeHtml() : ''}`);
   UI.shop = type;
 }
+const W_NOTE = { likeb: '👍 LIKE！完美命中時大絕招能量多 10', pbow: '🏹 老師的叮嚀：完美命中時傷害多 10%', shalun: '👑 沙崙鎮店之寶，不能強化' };
 function buy(t, id) {
   const price = t === 'w' ? WEAPONS[id].price : ITEMS[id].price;
   if (me.gold < price) return toast('金幣不夠喔！');
@@ -18259,7 +18275,22 @@ function festActive() {
 
 // ---------- 存檔：me.fest[key] = { a, b, c, done } ----------
 const festRec = key => { me.fest = me.fest || {}; return me.fest[key] = me.fest[key] || {}; };
-const festKeyOf = id => { const x = festActive().find(x => x.f.id === id); return x ? x.key : null; };
+// 進村時記住這次節日的 key：節日剛好在玩的時候關掉，做完的任務還是記得到
+const FEST_KEYC = {};
+const festKeyOf = id => { const x = festActive().find(x => x.f.id === id); return x ? (FEST_KEYC[id] = x.key) : (FEST_KEYC[id] || null); };
+// 節日關了、人還在節慶村：等他打完／玩完手上的事，主持人說聲收攤，再送回村子
+let festCloseBusy = false;
+setInterval(async () => {
+  try {
+    if (festCloseBusy || !me || typeof world === 'undefined' || !world.A || !world.A.fest || !PACK) return;
+    if (festActive().some(x => x.f.id === world.A.fest)) return;
+    if (!world.active || UI.busy || UI.dialogOpen || (typeof B !== 'undefined' && B.st) || $('ov').innerHTML || $('modal').innerHTML || document.querySelector('.askbox')) return;
+    festCloseBusy = true; world.active = false;
+    await dialog([['festhost', '節慶村要收攤囉！謝謝你來玩～做完的任務都幫你記下來了。'], ['festhost', '我送你回村子，下次節日再見！']]);
+    await fadeTo(() => enterArea(PACK.home, 300, 1));
+    world.active = true; updateHUD();
+  } catch (e) { console.warn(e); } finally { festCloseBusy = false; }
+}, 2000);
 
 // ---------- 節慶村地圖 ----------
 function festArea(f) {
