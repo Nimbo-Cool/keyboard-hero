@@ -1554,6 +1554,8 @@ const PXDEF = {
   shoe: ['........', '........', '.bb.....', '.bbb....', '.bbbbb..', 'bbwbbbbb', 'kkkkkkkk', '........'],
   printer: ['...wwwww..', '...wkkkw..', '...wwwww..', '.EEEEEEEE.', 'EeeeeeeeeE', 'EeeeeeegeE', 'EeeeeeeeeE', 'EEwwwwwwEE', '..wkkkkw..', '..wwwwww..'],
   ac: ['..kkkkkk..', '.kPPPPPPk.', 'kPppyypPPk', 'kPppyyppPk', 'kPyyyyyyPk', 'kPpyyyypPk', 'kPpyyyypPk', 'kPyyppyyPk', '.kPPPPPPk.', '..kkkkkk..'],
+  bubm: ['...bbbb...', '.bbwwbbbb.', '.bwwbbbbb.', 'bbwbbbbbbk', 'bbbbbbbbbk', 'bbbbbbbbbk', 'bbbbbbbbbk', '.bbbbbbbk.', '.kbbbbbkk.', '...kkkk...'],
+  snake: ['....GGGG..', '...GgggkG.', '...Ggggggr', '....GGGG..', '.GGGg.....', 'Ggggg.....', 'Gg..GGGG..', 'Gggggggggk', '.GGGGGGGG.', '..........'],
   jq: ['....yy....', '....yy....', 'yyyyyyyyyy', '.yrryybby.', '..yyyyyy..', '..yyyyyy..', '.ybbyyrry.', 'yyyyyyyyyy', '....yy....', '....yy....'],
   xq: ['..NNNNNN..', '.NwwwwwwN.', 'NwwRRRRwwN', 'NwRwwwwRwN', 'NwRwrrwRwN', 'NwRwrrwRwN', 'NwRwwwwRwN', 'NwwRRRRwwN', '.NwwwwwwN.', '..NNNNNN..'],
   sling: ['nn......nn', 'nN......Nn', 'nNr....rNn', '.nNr..rNn.', '..nNrrNn..', '...nNNn...', '....nN....', '....nN....', '....nN....', '....NN....'],
@@ -1614,7 +1616,7 @@ const PXVAR = {
 };
 // emoji → 圖（emoji 不含 FE0F）
 const PXMAP = {
-  '\uE100': 'sling', '\uE101': 'xq', '\uE102': 'ac', '\uE103': 'jq', '👟': 'shoe', '🥾': 'shoe', '🏐': 'vball', '🧱': 'brick', '🐉': 'dragon', '🐲': 'dragon', '🐇': 'rabbit', '↩': 'back', '🔙': 'back',
+  '\uE100': 'sling', '\uE101': 'xq', '\uE102': 'ac', '\uE103': 'jq', '\uE104': 'snake', '\uE105': 'bubm', '👟': 'shoe', '🥾': 'shoe', '🏐': 'vball', '🧱': 'brick', '🐉': 'dragon', '🐲': 'dragon', '🐇': 'rabbit', '↩': 'back', '🔙': 'back',
   '🏁': 'flag', '⭐': 'star', '🌟': 'star', '★': 'star', '🎯': 'target', '🎨': 'palette', '✨': 'sparkle', '💫': 'sparkle', '⌨': 'keyboard', '✅': 'check', '✔': 'check',
   '🎉': 'party', '🔑': 'key', '🗝': 'key', '🎵': 'note', '🎶': 'note', '🌿': 'herb', '🍀': 'herb', '🎬': 'clapper', '📦': 'box', '🏅': 'medal', '🎖': 'medal',
   '🖱': 'mouse', '🛡': 'shield', '🎁': 'gift', '🐱': 'cat', '😺': 'cat', '💡': 'bulb', '🏫': 'school', '☁': 'cloud', '📚': 'books', '🖼': 'picture', '📜': 'scroll',
@@ -4752,12 +4754,12 @@ async function talkGeneric(id) {
     // 連線版由老師在後台逐一勾選，沒勾的就看不到（某位學生被禁玩是另一件事，點了才會說不行）
     const on = id2 => typeof gameOn !== 'function' || gameOn(id2);
     const prac = N.arena.list.filter(o => on(practiceCat(o.mini)));
-    const ARENA = typeof tbOpen === 'function' ? [['tb', '⌨️ 鍵帽拼拼樂'], ['pv', '🏐 像素排球'], ['sg', '\uE100 彈弓對決'], ['bb', '🫧 泡泡對戰'], ['bm', '💎 寶石炸彈陣'], ['sm', '⚔️ 勇者擂台'], ['xq', '\uE101 魔棋爭先'], ['ac', '\uE102 迷霧魔棋'], ['jq', '\uE103 跳跳星城']].filter(([g]) => on(g)) : [];
+    const ARENA = typeof tbOpen === 'function' ? [['tb', '⌨️ 鍵帽拼拼樂'], ['pv', '🏐 像素排球'], ['sg', '\uE100 彈弓對決'], ['bb', '🫧 泡泡對戰'], ['bm', '💎 寶石炸彈陣'], ['sk', '\uE104 字母蛇'], ['mz', '\uE105 泡泡迷宮戰'], ['sm', '⚔️ 勇者擂台'], ['xq', '\uE101 魔棋爭先'], ['ac', '\uE102 迷霧魔棋'], ['jq', '\uE103 跳跳星城']].filter(([g]) => on(g)) : [];
     const rec = prac.map(o => { const D = MINIS[o.mini]; return D.practice ? `${D.title} ${me.best[D.practice] || 0}${D.unit}` : ''; }).filter(Boolean).join('、');
     const opts = prac.map(o => ({ t: o.t, v: o.mini })).concat(ARENA.map(([g, t]) => ({ t, v: '__' + g })), BOARD_OPT());
     if (!opts.length) return dialog([[id, '競技場今天休息中，老師還沒有開放這裡的遊戲喔！先去冒險吧～']]);
     const v = await choose(id, rec ? `歡迎來到競技場！你的紀錄：${rec}` : '歡迎來到競技場！想玩什麼？', opts.concat([{ t: '下次再說', v: null }]));
-    const OPEN = { __tb: () => tbOpen(), __pv: () => pvOpen(), __sg: () => sgOpen(), __bb: () => bbOpen(), __bm: () => bmOpen(), __sm: () => smOpen(), __xq: () => xqOpen(), __ac: () => acOpen(), __jq: () => jqOpen(), __board: () => classBoard() };
+    const OPEN = { __tb: () => tbOpen(), __pv: () => pvOpen(), __sg: () => sgOpen(), __bb: () => bbOpen(), __bm: () => bmOpen(), __sk: () => skOpen(), __mz: () => mzOpen(), __sm: () => smOpen(), __xq: () => xqOpen(), __ac: () => acOpen(), __jq: () => jqOpen(), __board: () => classBoard() };
     if (OPEN[v]) { setTimeout(OPEN[v], 30); return; }
     if (v) return practice(v, id);
     return;
@@ -5044,31 +5046,45 @@ const SIDE_SKIP = new Set();
 async function sideTalk(id) {
   if (!me || !PACK) return false;
   me.side = me.side || {};
+  // 先整理這位 NPC 身上的委託：可以領獎（ready）、要再挑戰（retry）、新的（new）、還在累積（prog）
+  const acts = [];
   for (const s of sideList().filter(s => s.who === id)) {
     const st = me.side[s.id];
     if (st && st.st === 'done') continue;
-    if (st && st.st === 'on') {
-      if (sideCount(s)) {
-        if (sideN(s, st) >= s.need) { await sideFinish(s); return true; }
-        toast(`🧩 委託「${s.t}」：${s.stars3 ? '三星練習' : s.collect ? s.collect.n : MONS[s.kill].n} ${sideN(s, st)} / ${s.need}`, 2600);
-        continue;
-      }
-      const v = await choose(id, s.again || `委託「${s.t}」還沒完成，要再挑戰一次嗎？`, [{ t: '🧩 再挑戰', v: 1 }, { t: '先做別的事', v: 0 }]);
-      if (v) { await sidePlay(s); return true; }
-      continue;
-    }
-    if (!sideOpen(s) || SIDE_SKIP.has(s.id)) continue;
-    if (s.pre) await dialog(s.pre.map(l => Array.isArray(l) ? l : [id, l]));
-    const v = await choose(id, `${s.story ? `📖 ${s.story}・第 ${s.ch} 章「${s.t}」` : s.stars3 ? `🏅 ${s.t}` : `🧩 支線委託「${s.t}」`}：${s.g}`, [{ t: '✅ 接受委託', v: 1 }, { t: '下次再說', v: 0 }]);
-    if (!v) { SIDE_SKIP.add(s.id); return false; }  // 先不接：這次就不再問，繼續原本的對話
-    me.side[s.id] = { st: 'on', n: 0 }; saveMe(); SFX.star();
-    if (s.mini) { await sidePlay(s); return true; }
-    if (s.talk) { await sideFinish(s); return true; }
-    if ((s.collect || s.stars3) && sideN(s) >= s.need) { await sideFinish(s); return true; }
-    await dialog([[id, s.go || `打倒 ${s.need} 隻${MONS[s.kill].n}，再回來找我！`]]);
-    return true;
+    if (st && st.st === 'on') { acts.push({ s, k: sideCount(s) ? (sideN(s, st) >= s.need ? 'ready' : 'prog') : 'retry' }); continue; }
+    if (sideOpen(s) && !SIDE_SKIP.has(s.id)) acts.push({ s, k: 'new' });
   }
-  return false;
+  const ORD = { ready: 0, retry: 1, new: 2 }, prog = acts.filter(a => a.k === 'prog'), doable = acts.filter(a => a.k !== 'prog').sort((x, y) => ORD[x.k] - ORD[y.k]);
+  const progToast = () => { if (prog.length) toast(prog.map(({ s }) => `🧩 ${s.t}：${s.stars3 ? '三星練習' : s.collect ? s.collect.n : MONS[s.kill].n} ${sideN(s, me.side[s.id])} / ${s.need}`).join('　｜　'), 3000); };
+  if (!doable.length) { progToast(); return false; }
+  const label = s => s.story ? `📖 第 ${s.ch} 章「${s.t}」` : s.stars3 ? `🏅 ${s.t}` : `🧩 ${s.t}`;
+  let a = doable[0], fromList = false;
+  if (doable.length > 1) {
+    // 一次有好幾個：列成清單讓學生自己選
+    const ready = doable.filter(x => x.k === 'ready').length;
+    const v = await choose(id, `我這裡有 ${doable.length} 個委託${ready ? `，其中 ${ready} 個已經可以領獎` : ''}！想先做哪一個？`,
+      doable.map((x, i) => ({ t: (x.k === 'ready' ? '⭐ 領獎：' : x.k === 'retry' ? '🔁 再挑戰：' : '') + label(x.s), v: i })).concat([{ t: '先不用', v: null }]));
+    if (v == null) { progToast(); return false; }
+    a = doable[v]; fromList = true;
+  }
+  const s = a.s;
+  if (a.k === 'ready') { await sideFinish(s); return true; }
+  if (a.k === 'retry') {
+    if (!fromList) {
+      const v = await choose(id, s.again || `委託「${s.t}」還沒完成，要再挑戰一次嗎？`, [{ t: '🧩 再挑戰', v: 1 }, { t: '先做別的事', v: 0 }]);
+      if (!v) return false;
+    }
+    await sidePlay(s); return true;
+  }
+  if (s.pre) await dialog(s.pre.map(l => Array.isArray(l) ? l : [id, l]));
+  const v = await choose(id, `${s.story ? `📖 ${s.story}・第 ${s.ch} 章「${s.t}」` : s.stars3 ? `🏅 ${s.t}` : `🧩 支線委託「${s.t}」`}：${s.g}`, [{ t: '✅ 接受委託', v: 1 }, { t: '下次再說', v: 0 }]);
+  if (!v) { SIDE_SKIP.add(s.id); return false; }  // 先不接：這次就不再問，繼續原本的對話
+  me.side[s.id] = { st: 'on', n: 0 }; saveMe(); SFX.star();
+  if (s.mini) { await sidePlay(s); return true; }
+  if (s.talk) { await sideFinish(s); return true; }
+  if ((s.collect || s.stars3) && sideN(s) >= s.need) { await sideFinish(s); return true; }
+  await dialog([[id, s.go || `打倒 ${s.need} 隻${MONS[s.kill].n}，再回來找我！`]]);
+  return true;
 }
 function sideKill(kind) {
   if (!me || !me.side) return;
@@ -15036,6 +15052,1403 @@ const bmRoom = {
 .bmopt{margin:4px 0 10px;display:flex;gap:12px;justify-content:center;align-items:center;font-weight:800}.bmopt select{font-size:15px;padding:3px;font-family:inherit}`;
   document.head.appendChild(st);
 })();
+// =====================================================================
+//  字母蛇：2～4 條蛇在同一塊草地上，照順序吃字母（或注音）拼出自己的題目
+//  ‧方向鍵轉彎；吃對下一個字母：變長＋1 分；拼完一個字：再＋10 分，換下一題
+//  ‧吃錯會變短；撞到牆或別的蛇會暈 2 秒、回到起點（分數保留，沒有人出局）
+//  ‧時間 2 分 30 秒，分數最高的贏；同分比誰比較長
+//  ‧整場用固定步驟模擬（每秒 20 步、全部整數），電腦也在模擬裡算，
+//    連線時跟寶石炸彈陣用同一套方式（只送按鍵），每台電腦算出來的結果一樣
+// =====================================================================
+const SK = {
+  W: 26, H: 16, C: 34, TPS: 20, MV: 4, LEN0: 3, TIME: 150 * 20, STUN: 40, NITEM: 7,
+  COL: ['#e04f3f', '#3a6fd8', '#6abe30', '#ffd23f'], DARK: ['#8a2a20', '#1f3f8a', '#3a7a1a', '#a8801a'],
+  CNAME: ['紅', '藍', '綠', '黃'],
+  START: [[4, 3, 1], [21, 12, 3], [21, 3, 3], [4, 12, 1]],
+  DX: [0, 1, 0, -1], DY: [-1, 0, 1, 0]
+};
+const SKI = { U: 1, D: 2, L: 4, R: 8 };
+// 題庫：英文（3／4／5 個字母，附中文意思）、注音（不含聲調）
+SK.Q = [
+  { name: '英文 3 個字母', tip: '三年級：cat、dog、sun……', en: 1, L: 'cat貓 dog狗 pig豬 sun太陽 cup杯子 hat帽子 bag書包 box盒子 bus公車 egg蛋 pen原子筆 red紅色 bed床 fox狐狸 map地圖 ant螞蟻 bee蜜蜂 cow母牛 car汽車 toy玩具' },
+  { name: '英文 4 個字母', tip: '四年級：book、fish、cake……', en: 1, L: 'book書 fish魚 cake蛋糕 milk牛奶 frog青蛙 star星星 desk書桌 rain雨 ball球 bird鳥 lion獅子 duck鴨子 tree樹 hand手 moon月亮 kite風箏 rice米飯 blue藍色 home家 ship船' },
+  { name: '英文 5 個字母', tip: '五、六年級：apple、tiger……', en: 1, L: 'apple蘋果 tiger老虎 water水 music音樂 happy快樂 chair椅子 mouse老鼠 horse馬 bread麵包 juice果汁 house房子 green綠色 smile微笑 clock時鐘 zebra斑馬 pizza披薩 panda貓熊 grape葡萄 beach海灘 lemon檸檬' },
+  { name: '注音', tip: '照順序吃注音符號，拼出字的讀音（不含聲調）', en: 0, L: '貓ㄇㄠ 狗ㄍㄡ 牛ㄋㄧㄡ 書ㄕㄨ 花ㄏㄨㄚ 山ㄕㄢ 天ㄊㄧㄢ 火ㄏㄨㄛ 水ㄕㄨㄟ 車ㄔㄜ 鳥ㄋㄧㄠ 馬ㄇㄚ 羊ㄧㄤ 米ㄇㄧ 刀ㄉㄠ 筆ㄅㄧ 門ㄇㄣ 家ㄐㄧㄚ 球ㄑㄧㄡ 糖ㄊㄤ 熊ㄒㄩㄥ 星ㄒㄧㄥ 雲ㄩㄣ 蛇ㄕㄜ 龍ㄌㄨㄥ 兔ㄊㄨ 船ㄔㄨㄢ 風ㄈㄥ 草ㄘㄠ 燈ㄉㄥ' }
+];
+SK.Q.forEach(q => {
+  q.words = q.L.split(' ').map(x => {
+    if (q.en) { const m = x.match(/^([a-z]+)(.+)$/); return { s: m[1].split(''), w: m[1], m: m[2] }; }
+    return { s: [...x.slice(1)], w: x[0], m: x.slice(1) };
+  });
+  q.sym = [...new Set(q.words.flatMap(w => w.s))];
+});
+const skRand = st => (st.r = (Math.imul(st.r, 1103515245) + 12345) & 0x7fffffff) / 0x80000000;
+const skRi = (st, n) => Math.floor(skRand(st) * n) % n;
+const skCell = (x, y) => y * SK.W + x;
+
+function skPlace(p, i) {
+  const [x, y, d] = SK.START[i];
+  p.b = []; for (let k = 0; k < SK.LEN0; k++) p.b.push(skCell(x - SK.DX[d] * k, y - SK.DY[d] * k));
+  p.d = p.nd = d;
+}
+function skNew(seed, roster, q = 0) {
+  const st = { q, t: 0, r: (seed >>> 0) || 1, p: [], it: [], over: -1, ended: 0 };
+  roster.forEach((ro, i) => {
+    const p = { b: [], d: 1, nd: 1, sc: 0, w: 0, k: 0, stun: 0, bot: ro.bot ? 1 : 0, lv: ro.lv || 0, words: 0, good: 0, bad: 0 };
+    skPlace(p, i); p.w = skRi(st, SK.Q[q].words.length); st.p.push(p);
+  });
+  skFill(st, null);
+  return st;
+}
+function skClone(s) { return { ...s, p: s.p.map(p => ({ ...p, b: p.b.slice() })), it: s.it.map(x => ({ ...x })) }; }
+const skNeed = (st, p) => SK.Q[st.q].words[p.w].s[p.k];
+function skBusy(st) {
+  const occ = new Uint8Array(SK.W * SK.H);
+  st.p.forEach(p => p.b.forEach(c => { occ[c] = 1; }));
+  st.it.forEach(x => { occ[x.c] = 2; });
+  return occ;
+}
+// 每個人需要的下一個符號場上至少要有一個，再補一些干擾的
+function skFill(st, ev) {
+  const Q = SK.Q[st.q], occ = skBusy(st);
+  const near = c => st.p.some(p => { const h = p.b[0], hx = h % SK.W, hy = (h / SK.W) | 0, x = c % SK.W, y = (c / SK.W) | 0; return Math.abs(hx - x) + Math.abs(hy - y) < 3; });
+  const spot = () => { for (let k = 0; k < 200; k++) { const c = skRi(st, SK.W * SK.H); if (!occ[c] && !near(c)) return c; } for (let c = 0; c < SK.W * SK.H; c++) if (!occ[c]) return c; return -1; };
+  const add = ch => { const c = spot(); if (c < 0) return; occ[c] = 2; st.it.push({ c, ch }); ev && ev.push({ t: 'spawn', c }); };
+  st.p.forEach(p => { const n = skNeed(st, p); if (!st.it.some(x => x.ch === n)) add(n); });
+  while (st.it.length < SK.NITEM + st.p.length) {
+    // 干擾的：一半是某個人題目裡的字母（會讓人想一下），一半隨便
+    const p = st.p[skRi(st, st.p.length)], wd = Q.words[p.w].s;
+    add(skRand(st) < .5 ? wd[skRi(st, wd.length)] : Q.sym[skRi(st, Q.sym.length)]);
+  }
+}
+function skCrash(st, i, ev) {
+  const p = st.p[i]; p.stun = SK.STUN; ev && ev.push({ t: 'crash', i });
+}
+function skStep(st, ins, ev) {
+  if (st.over !== -1) { st.t++; return; }
+  st.t++;
+  const Q = SK.Q[st.q];
+  // 輸入 → 下一步要走的方向（不能直接迴轉）
+  st.p.forEach((p, i) => {
+    let v = p.bot ? (st.t % SK.MV === SK.MV - 1 ? skBot(st, i) : 0) : ins[i];
+    if (v < 0) v = 0;
+    const d = v & SKI.U ? 0 : v & SKI.R ? 1 : v & SKI.D ? 2 : v & SKI.L ? 3 : -1;
+    if (d >= 0 && d !== (p.d + 2) % 4) p.nd = d;
+  });
+  // 暈倒的人倒數，時間到回起點
+  st.p.forEach((p, i) => {
+    if (!p.stun) return;
+    if (--p.stun === 0) {
+      skPlace(p, i);
+      const occ = new Uint8Array(SK.W * SK.H); st.p.forEach((q, j) => { if (j !== i) q.b.forEach(c => { occ[c] = 1; }); });
+      if (p.b.some(c => occ[c])) p.stun = 5;   // 起點被擋住：再等一下
+      else { st.it = st.it.filter(x => !p.b.includes(x.c)); ev && ev.push({ t: 'back', i }); }
+    }
+  });
+  if (st.t % SK.MV === 0) {
+    const mv = st.p.map((p, i) => i).filter(i => !st.p[i].stun);
+    const head = {};
+    mv.forEach(i => {
+      const p = st.p[i]; p.d = p.nd;
+      const h = p.b[0], x = h % SK.W + SK.DX[p.d], y = ((h / SK.W) | 0) + SK.DY[p.d];
+      head[i] = x < 0 || y < 0 || x >= SK.W || y >= SK.H ? -1 : skCell(x, y);
+    });
+    // 會不會撞到：牆、別人（或自己）的身體、同時撞頭
+    const occ = new Uint8Array(SK.W * SK.H);
+    st.p.forEach((p, i) => p.b.forEach((c, k) => { if (!(k === p.b.length - 1 && mv.includes(i))) occ[c] = 1; }));
+    const dead = new Set();
+    mv.forEach(i => {
+      const c = head[i];
+      if (c < 0 || occ[c]) dead.add(i);
+      mv.forEach(j => { if (j !== i && head[j] === c) dead.add(i); });
+    });
+    mv.forEach(i => {
+      const p = st.p[i];
+      if (dead.has(i)) { skCrash(st, i, ev); return; }
+      const c = head[i]; p.b.unshift(c);
+      const ii = st.it.findIndex(x => x.c === c);
+      if (ii >= 0) {
+        const it = st.it[ii]; st.it.splice(ii, 1);
+        if (it.ch === skNeed(st, p)) {
+          p.sc += 1; p.k++; p.good++;
+          if (p.k < Q.words[p.w].s.length) ev && ev.push({ t: 'good', i, c, ch: it.ch });
+          else {
+            p.sc += 10; p.words++; ev && ev.push({ t: 'word', i, c, w: p.w });
+            let nw = skRi(st, Q.words.length); if (nw === p.w) nw = (nw + 1) % Q.words.length;
+            p.w = nw; p.k = 0;
+          }
+          return;   // 吃對：不縮尾巴（變長）
+        }
+        p.bad++; ev && ev.push({ t: 'bad', i, c, ch: it.ch });
+        p.b.pop(); if (p.b.length > 2) p.b.pop();   // 吃錯：變短一格
+        return;
+      }
+      p.b.pop();
+    });
+    skFill(st, ev);
+  }
+  if (st.t >= SK.TIME) {
+    const best = Math.max(...st.p.map(p => p.sc));
+    const top = st.p.map((p, i) => i).filter(i => st.p[i].sc === best);
+    let w = top;
+    if (top.length > 1) { const L = Math.max(...top.map(i => st.p[i].b.length)); w = top.filter(i => st.p[i].b.length === L); }
+    st.over = w.length === 1 ? w[0] : -2; st.ended = 1;
+  }
+}
+
+// ---------- 電腦（在模擬裡算） ----------
+const SK_LV = [{ miss: .22, care: 0 }, { miss: .08, care: 1 }, { miss: 0, care: 1 }];
+function skBot(st, i) {
+  const p = st.p[i]; if (p.stun) return 0;
+  const L = SK_LV[p.lv] || SK_LV[0], W = SK.W, N = W * SK.H;
+  const block = new Uint8Array(N);
+  st.p.forEach((q, j) => q.b.forEach((c, k) => { if (k !== q.b.length - 1) block[c] = 1; }));
+  // 別人頭的前面也當作危險
+  st.p.forEach((q, j) => { if (j === i || q.stun) return; const h = q.b[0], x = h % W + SK.DX[q.nd], y = ((h / W) | 0) + SK.DY[q.nd]; if (x >= 0 && y >= 0 && x < W && y < SK.H) block[skCell(x, y)] = 1; });
+  const need = skNeed(st, p);
+  if (L.care) st.it.forEach(x => { if (x.ch !== need) block[x.c] = 1; });
+  const goal = new Uint8Array(N); st.it.forEach(x => { if (x.ch === need) goal[x.c] = 1; });
+  const h = p.b[0], hx = h % W, hy = (h / W) | 0;
+  const ok = d => { if (d === (p.d + 2) % 4) return false; const x = hx + SK.DX[d], y = hy + SK.DY[d]; return x >= 0 && y >= 0 && x < W && y < SK.H && !block[skCell(x, y)]; };
+  const BIT = [SKI.U, SKI.R, SKI.D, SKI.L];
+  if (skRand(st) < L.miss) { const opts = [0, 1, 2, 3].filter(ok); if (opts.length) return BIT[opts[skRi(st, opts.length)]]; }
+  // BFS 找最近的目標
+  const prev = new Int16Array(N).fill(-1), first = new Int8Array(N).fill(-1), q = [];
+  for (let d = 0; d < 4; d++) if (ok(d)) { const c = skCell(hx + SK.DX[d], hy + SK.DY[d]); prev[c] = h; first[c] = d; q.push(c); }
+  for (let qi = 0; qi < q.length; qi++) {
+    const c = q[qi]; if (goal[c]) return BIT[first[c]];
+    const x = c % W, y = (c / W) | 0;
+    for (let d = 0; d < 4; d++) { const nx = x + SK.DX[d], ny = y + SK.DY[d]; if (nx < 0 || ny < 0 || nx >= W || ny >= SK.H) continue; const n = skCell(nx, ny); if (block[n] || prev[n] >= 0 || n === h) continue; prev[n] = c; first[n] = first[c]; q.push(n); }
+  }
+  // 找不到路：往空間最大的方向走
+  let best = -1, bd = p.d;
+  for (let d = 0; d < 4; d++) if (ok(d)) { let n = 0; const seen = new Set(); const s0 = skCell(hx + SK.DX[d], hy + SK.DY[d]); const qq = [s0]; seen.add(s0); while (qq.length && n < 60) { const c = qq.shift(); n++; const x = c % W, y = (c / W) | 0; for (let e = 0; e < 4; e++) { const nx = x + SK.DX[e], ny = y + SK.DY[e]; if (nx < 0 || ny < 0 || nx >= W || ny >= SK.H) continue; const m = skCell(nx, ny); if (!block[m] && !seen.has(m)) { seen.add(m); qq.push(m); } } } if (n > best) { best = n; bd = d; } }
+  return BIT[bd];
+}
+
+// ---------- 畫面 ----------
+function skScene(cv) {
+  const C = SK.C, W = SK.W * C, H = SK.H * C;
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+  const b = bg.getContext('2d');
+  for (let y = 0; y < SK.H; y++) for (let x = 0; x < SK.W; x++) {
+    b.fillStyle = (x + y) % 2 ? '#7cc45a' : '#86cf62'; b.fillRect(x * C, y * C, C, C);
+    if ((x * 7 + y * 13) % 11 === 0) { b.fillStyle = '#6ab24a'; b.fillRect(x * C + 8, y * C + 20, 4, 6); b.fillRect(x * C + 14, y * C + 18, 4, 8); }
+  }
+  return (st, o) => {
+    g.drawImage(bg, 0, 0);
+    const t = st.t, Q = SK.Q[st.q];
+    // 字母
+    st.it.forEach(x => {
+      const cx = (x.c % SK.W) * C, cy = ((x.c / SK.W) | 0) * C, need = o.me >= 0 && st.p[o.me] && x.ch === skNeed(st, st.p[o.me]);
+      g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(cx + 4, cy + 6, C - 6, C - 6);
+      g.fillStyle = need ? '#fff3a8' : '#fffaf0'; g.fillRect(cx + 2, cy + 2, C - 6, C - 6);
+      g.strokeStyle = need ? '#e0a800' : '#3a2a1a'; g.lineWidth = need ? 3 : 2; g.strokeRect(cx + 2, cy + 2, C - 6, C - 6);
+      g.fillStyle = '#2b1d14'; g.font = `900 ${Q.en ? 22 : 20}px ${Q.en ? 'monospace' : 'sans-serif'}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(x.ch, cx + C / 2 - 1, cy + C / 2 + 1);
+    });
+    // 蛇
+    st.p.forEach((p, i) => {
+      const blink = p.stun && (t >> 2) % 2;
+      g.globalAlpha = p.stun ? (blink ? .25 : .55) : 1;
+      for (let k = p.b.length - 1; k >= 0; k--) {
+        const c = p.b[k], x = (c % SK.W) * C, y = ((c / SK.W) | 0) * C, pad = k === 0 ? 1 : 4;
+        g.fillStyle = SK.DARK[i]; g.fillRect(x + pad, y + pad, C - pad * 2, C - pad * 2);
+        g.fillStyle = SK.COL[i]; g.fillRect(x + pad + 2, y + pad + 2, C - pad * 2 - 4, C - pad * 2 - 6);
+        if (k === 0) {
+          const d = p.d, ex = [[10, 8, 22, 8], [24, 10, 24, 22], [10, 24, 22, 24], [8, 10, 8, 22]][d];
+          g.fillStyle = '#fff'; g.fillRect(x + ex[0] - 3, y + ex[1] - 3, 7, 7); g.fillRect(x + ex[2] - 3, y + ex[3] - 3, 7, 7);
+          g.fillStyle = '#111'; g.fillRect(x + ex[0] - 1 + SK.DX[d], y + ex[1] - 1 + SK.DY[d], 3, 3); g.fillRect(x + ex[2] - 1 + SK.DX[d], y + ex[3] - 1 + SK.DY[d], 3, 3);
+          if (i === o.me) { g.fillStyle = '#fff'; g.font = '900 13px sans-serif'; g.textAlign = 'center'; g.fillText('你', x + C / 2, y - 6); }
+          if (p.stun) { g.fillStyle = '#ffd23f'; for (let s2 = 0; s2 < 3; s2++) { const an = t / 4 + s2 * 2.1; g.fillRect(x + C / 2 + Math.cos(an) * 12 - 2, y + 4 + Math.sin(an) * 5 - 2, 5, 5); } }
+        }
+      }
+      g.globalAlpha = 1;
+    });
+    // 吃到的特效
+    (o.fx || []).forEach(f => {
+      const x = (f.c % SK.W) * C + C / 2, y = ((f.c / SK.W) | 0) * C - (t - f.t) * 1.2;
+      g.globalAlpha = Math.max(0, 1 - (t - f.t) / 24); g.fillStyle = f.good ? '#fff' : '#ff6b5a'; g.font = '900 18px sans-serif'; g.textAlign = 'center';
+      g.fillText(f.txt, x, y); g.globalAlpha = 1;
+    });
+  };
+}
+
+function skPlay(o) {
+  return new Promise(res => {
+    const net = o.mode === 'net';
+    const roster = net ? o.roster : [{ n: me.name }].concat(Array.from({ length: o.bots }, () => ({ bot: 1, lv: o.level })));
+    const mine = net ? o.mySlot : 0;
+    const names = roster.map((r, i) => r.bot ? `電腦${SK.CNAME[i]}` : r.n || '玩家');
+    const q = o.q || 0, Q = SK.Q[q];
+    let st = skNew(net ? o.seed : (Math.random() * 1e9) | 0, roster, q);
+    const k = Math.min(1.2, (innerHeight - 110) / (SK.H * SK.C), (innerWidth - 330) / (SK.W * SK.C));
+    $('ov').innerHTML = `<div class="bmwrap skwrap px" id="skwrap">
+      <div class="bmside skside" id="skSide"></div>
+      <div class="bmstage"><div class="bmtop"><span class="bmmap">${Q.name}</span><span id="skClock" class="skclock"></span><button class="pbtn small gray" id="skQuit">離開</button></div>
+        <canvas id="skCv" style="width:${Math.round(SK.W * SK.C * k)}px;height:${Math.round(SK.H * SK.C * k)}px"></canvas>
+        <div class="tbcount" id="skCount"></div><div class="bmnote" id="skNote"></div></div></div>`;
+    const draw = skScene($('skCv'));
+    const fx = [];
+    // 輸入：最後按下的方向優先
+    // 輸入：按一下就記住（蛇是「轉彎」，不用一直按著）；同一步按了兩個方向，下一步再處理第二個
+    const keyBit = { ArrowUp: SKI.U, ArrowDown: SKI.D, ArrowLeft: SKI.L, ArrowRight: SKI.R, KeyW: SKI.U, KeyS: SKI.D, KeyA: SKI.L, KeyD: SKI.R };
+    const tapQ = [];
+    let started = false, ended = false, raf = 0;
+    const kd = e => {
+      if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); $('skQuit').click(); return; }
+      if (!(e.code in keyBit)) return;
+      e.preventDefault(); e.stopPropagation();
+      if (!e.repeat && tapQ.length < 3 && tapQ[tapQ.length - 1] !== keyBit[e.code]) tapQ.push(keyBit[e.code]);
+    };
+    const ku = () => {};
+    const blur = () => { tapQ.length = 0; };
+    addEventListener('keydown', kd, true); addEventListener('blur', blur);
+    const kdTap = () => {};
+    let lastTapF = -99;
+    const sample = f => { if (!tapQ.length || f - lastTapF < SK.MV) return 0; lastTapF = f; return tapQ.shift(); };
+    const sfx = list => list.forEach(e => {
+      if (e.t === 'good' && e.i === mine) beep(660 + 60 * Math.min(6, st.p[mine].k), .07, 'square', .04);
+      else if (e.t === 'word' && e.i === mine) SFX.coin();
+      else if (e.t === 'bad' && e.i === mine) beep(180, .18, 'sawtooth', .04, 0, -60);
+      else if (e.t === 'crash') beep(e.i === mine ? 140 : 360, .25, 'square', .04, 0, -150);
+      if ((e.t === 'good' || e.t === 'bad') && e.c != null) fx.push({ c: e.c, t: st.t, good: e.t === 'good', txt: e.t === 'good' ? '+1' : '✗' });
+      if (e.t === 'word') fx.push({ c: e.c, t: st.t, good: true, txt: '+11！' });
+    });
+    // ---------- 時間軸（連線時用回溯修正） ----------
+    const DELAY = net ? 2 : 0, MAXRB = 24, HB = 4;
+    let cur = 0;                                   // 已經算到第幾步
+    const hist = new Map();                        // 第 f 步之前的狀態
+    const used = new Map();                        // 第 f 步用了哪些輸入
+    const localIn = new Map();                     // 自己在第 f 步的輸入
+    const R = roster.map(() => ({ ch: [], conf: -1, quit: Infinity }));   // 別人：[f, 輸入] 變化紀錄
+    let lastSent = -99, lastSentV = -1, rbFrom = Infinity;
+    const inAt = (s, f) => {
+      if (s === mine) { for (let x = f; x >= 0 && x > f - 400; x--) if (localIn.has(x)) return localIn.get(x); return 0; }
+      const r = R[s]; if (f >= r.quit) return -1;
+      let v = 0; for (let j = r.ch.length - 1; j >= 0; j--) if (r.ch[j][0] <= f) { v = r.ch[j][1]; break; }
+      return v;
+    };
+    const humans = roster.map((r, i) => !r.bot && i !== mine ? i : -1).filter(i => i >= 0);
+    if (net) {
+      o.net.onMsg = (s, m) => {
+        const r = R[s]; if (!r || s === mine) return;
+        r.heard = performance.now(); if (!m.q && m.f > DELAY + 2) peerStarted = true;
+        if (m.q) { if (r.quit === Infinity) { r.quit = Math.max(m.f, r.conf + 1); if (r.quit < cur) rbFrom = Math.min(rbFrom, r.quit); } return; }
+        // 照 frame 順序插入（網路偶爾會讓訊息晚到、順序顛倒，不能直接丟掉）
+        if (r.ch.some(c => c[0] === m.f)) return;
+        if (m.f < r.conf) NETSTAT.late++;
+        const prev = inAt(s, m.f);
+        let k = r.ch.length; while (k > 0 && r.ch[k - 1][0] > m.f) k--;
+        r.ch.splice(k, 0, [m.f, m.i]); if (m.f > r.conf) r.conf = m.f;
+        if (m.i !== prev && m.f < cur) rbFrom = Math.min(rbFrom, m.f);
+      };
+      if (o.net.flush) o.net.flush();
+      o.net.onBye = s => { if (ended || R[s].quit !== Infinity) return; const alive = humans.filter(h => !o.net.gone(h)).concat(mine).sort((a, b) => a - b); if (alive[0] === mine) o.net.quitFor(s, Math.max(cur, R[s].conf + 1) + DELAY); };
+    }
+    const evq = [];
+    const simOne = (record) => {
+      hist.set(cur, skClone(st));
+      const ins = roster.map((r, s) => r.bot ? 0 : inAt(s, cur));
+      used.set(cur, ins);
+      skStep(st, ins, record ? evq : null);
+      cur++;
+    };
+    // 勝負確定：每位真人玩家，要嘛輸入已經確認到結束那一步，要嘛在已確認的範圍內就出局了（之後的輸入不影響結果）
+    const overSettled = () => humans.every(s => R[s].quit !== Infinity || R[s].conf >= SK.TIME);
+    const minConf = () => humans.reduce((m, s) => Math.min(m, R[s].quit !== Infinity ? Infinity : R[s].conf), Infinity);
+    let stallT = 0, overSeen = -1, lastSide = '', traceF = -1;
+    // 迴圈
+    const t0 = performance.now(), startAt = o.startAt || Date.now() + 3000;
+    let lastT = performance.now();
+    // ---- 連線保險 ----
+    let peerStarted = false, lastFrameAt = performance.now();
+    R.forEach(r => { r.heard = performance.now() + Math.max(0, startAt - Date.now()); });
+    const maxConf = () => humans.reduce((m, s) => Math.max(m, R[s].quit !== Infinity ? -1 : R[s].conf), -1);
+    const KICK_MS = NET_GRACE * 1000;   // 斷線的人等他 15 秒
+    const silentFor = s => performance.now() - R[s].heard;
+    // 卡住在等誰
+    const blocking = () => { const mc = minConf(); return humans.filter(s => R[s].quit === Infinity && R[s].conf === mc && cur - mc > MAXRB); };
+    const waitText = () => {
+      const b = blocking(); if (!b.length) return '等待其他玩家的連線……';
+      const sec = Math.ceil((KICK_MS - Math.max(...b.map(silentFor))) / 1000);
+      return `等待 ${b.map(s => names[s]).join('、')} 的連線……` + (sec <= 7 ? `（${Math.max(0, sec)} 秒後沒回應就讓他先離開）` : '');
+    };
+    // 一直沒回應的人：由還連得上的人裡面座位最前面的那一位，替他送出「離開」，大家在同一步把他移出比賽
+    const kickCheck = () => {
+      if (ended || typeof tbNet === 'undefined' || tbNet.conn === false) return;
+      blocking().forEach(s => {
+        if (R[s].kick || silentFor(s) < KICK_MS) return;
+        const ok = humans.filter(h => h !== s && R[h].quit === Infinity && silentFor(h) < KICK_MS).concat(mine).sort((x, y) => x - y);
+        if (ok[0] !== mine) return;
+        R[s].kick = 1; o.net.quitFor(s, Math.max(cur, R[s].conf + 1) + DELAY);
+        toast(`${names[s]} 連線中斷，先讓他離開，比賽繼續`, 3000);
+      });
+    };
+    // 模擬一步一步往前（含送出自己的輸入）；畫面在前景時每格呼叫，分頁在背景時由背景計時器呼叫
+    const tick = (now, target, dt, cap, live) => {
+      let evs = null;
+      if (!started && !ended && peerStarted) started = true;   // 自己的時鐘比較慢：別人已經開始了，就跟上
+      if (started && !ended) {
+        // 回溯：有人的輸入跟猜的不一樣，從那一步重算
+        if (rbFrom < cur) {
+          const f = Math.max(rbFrom, cur - MAXRB - 8);
+          if (hist.has(f)) { const end = cur; st = skClone(hist.get(f)); cur = f; while (cur < end) simOne(false); }
+          rbFrom = Infinity;
+        }
+        let n = 0;
+        if (net) kickCheck();
+        // 自己落後別人（時鐘比較慢、分頁剛回到前景）：追上去，不要讓大家等
+        let tgt = target;
+        if (net) { const mx = maxConf(); if (mx - DELAY - 2 > tgt) tgt = Math.min(mx - DELAY - 2, cur + 60); }
+        while (cur < tgt && n < cap) {
+          if (net && cur - minConf() > MAXRB) { stallT += dt; NETSTAT.stall = (NETSTAT.stall || 0) + dt; break; }
+          stallT = 0;
+          const f = cur + DELAY;
+          if (!localIn.has(f)) {
+            const v = window.__skBotPlay ? (st.t % SK.MV === SK.MV - 1 ? skBot(skClone(st), mine) : 0) : sample(f);
+            localIn.set(f, v);
+            if (net && (v !== lastSentV || f - lastSent >= (window.__HB || HB))) { o.net.send(f, v); lastSent = f; lastSentV = v; }
+          }
+          simOne(true); n++;
+        }
+        for (const f of hist.keys()) if (f < cur - MAXRB - 12) { hist.delete(f); used.delete(f); }
+        for (const f of localIn.keys()) if (f < cur - 400) localIn.delete(f);
+        { const ev2 = evq.splice(0); if (live) sfx(ev2); }
+        $('skNote').textContent = stallT > 1 ? waitText() : '';
+        // 結束：要等那一步的輸入都確認了
+        if (st.over !== -1 && (!net || overSettled())) { if (overSeen < 0) overSeen = now; if (now - overSeen > 900) finish(); }
+        else overSeen = -1;
+      }
+      return evs;
+    };
+    const frame = ts => {
+      if (!$('skwrap')) { cleanup(); return; }   // 畫面被關掉了：停止迴圈
+      const dt = Math.min(.1, (ts - lastT) / 1000); lastT = ts;
+      const now = Date.now(), target = Math.floor((now - startAt) / (1000 / SK.TPS));
+      let evs = tick(now, target, dt, 6, true); lastFrameAt = performance.now();
+      while (fx.length && st.t - fx[0].t > 24) fx.shift();
+      draw(st, { me: mine, fx });
+      // 側欄
+      const left = Math.max(0, Math.ceil((SK.TIME - st.t) / SK.TPS));
+      setHTML('skClock', `⏰ ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`);
+      const sideH = st.p.map((p, i) => { const W = Q.words[p.w]; return `<div class="bmpl skpl ${i === mine ? 'me' : ''}" style="border-color:${SK.COL[i]}"><b style="color:${SK.COL[i]}">${esc(names[i])}${i === mine ? '（你）' : ''}</b>
+        <div class="skw">${W.s.map((c, j) => `<i class="${j < p.k ? 'ok' : j === p.k ? 'nx' : ''}">${esc(c)}</i>`).join('')}</div><div class="skm">${Q.en ? esc(W.m) : esc(W.w)}</div>
+        <div class="sks">⭐ ${p.sc} 分　📏 ${p.b.length}${p.stun ? '　<b class="bmout">暈倒了</b>' : ''}</div></div>`; }).join('');
+      if (sideH !== lastSide) { lastSide = sideH; $('skSide').innerHTML = sideH; }
+      raf = requestAnimationFrame(frameSafe);
+    };
+    // 就算某一格出錯，也不讓整個遊戲停住（不用重新整理）
+    const frameSafe = ts => { try { frame(ts); } catch (e) { console.warn('遊戲畫面出錯', e); window.__frameErr = (window.__frameErr || 0) + 1; if (!ended) raf = requestAnimationFrame(frameSafe); } };
+    raf = requestAnimationFrame(frameSafe);
+    // 分頁在背景（縮小、切到別的分頁）時畫面不會更新，但模擬和送輸入要繼續，不然其他人會一直等
+    const stopBg = net ? bmBgTicker(() => { if (ended || !$('skwrap') || performance.now() - lastFrameAt < 200) return; try { const now = Date.now(); tick(now, Math.floor((now - startAt) / (1000 / SK.TPS)), .05, 60, false); } catch (e) { console.warn(e); } }) : () => {};
+    if (net) o.net.onKicked = () => { if (ended) return; toast('你的連線太久沒有回應，這一場先離開了', 4000); finish(true); };
+    const cd = setInterval(() => {
+      if (!$('skwrap')) { clearInterval(cd); return; }
+      const s = Math.ceil((startAt - Date.now()) / 1000);
+      if (s > 0 && !peerStarted) { $('skCount').textContent = s; $('skCount').className = 'tbcount on'; beep(440, .08, 'square', .04); }
+      else { clearInterval(cd); $('skCount').textContent = '開始！'; beep(880, .2, 'square', .05); setTimeout(() => { if ($('skCount')) $('skCount').className = 'tbcount'; }, 600); started = true; }
+    }, 200);
+    const cleanup = () => { stopBg(); clearInterval(cd); removeEventListener('keydown', kd, true); removeEventListener('blur', blur); };
+    function finish(quit) {
+      if (ended) return; ended = true; cleanup();
+      if (net) o.net.finish(quit, cur + DELAY);
+      const win = quit ? false : st.over === mine ? true : st.over === -2 ? null : false;
+      const rank = st.p.map((p, i) => i).sort((x, y) => st.p[y].sc - st.p[x].sc || st.p[y].b.length - st.p[x].b.length);
+      let title = quit ? '已離開' : win ? '你贏了！' : win === null ? '平手！' : `${esc(names[st.over])} 獲勝！`;
+      if (!quit) title += `<small>${rank.map((i, j) => `${j + 1}. <span style="color:${SK.COL[i]}">${esc(names[i])}</span> ${st.p[i].sc} 分`).join('　')}</small><small>你拼完 ${st.p[mine].words} 個字、吃對 ${st.p[mine].good} 個、吃錯 ${st.p[mine].bad} 個</small>`;
+      if (win) SFX.win(); else if (win === false && !quit) SFX.wrong();
+      const gold = win ? (net ? 20 : 10 + o.level * 10 + (o.bots - 1) * 5) : 0;
+      if (gold) { me.gold += gold; saveMe(); updateHUD(); title += `<small>🪙 獲得 ${gold} 金幣</small>`; }
+      const box = document.createElement('div'); box.className = 'tbend';
+      box.innerHTML = `<div class="px"><h2>${title}</h2>${net ? '<button class="pbtn green big" id="skAgain">再來一局</button> <button class="pbtn gray big" id="skLeave">離開房間</button>' : '<button class="pbtn green big" id="skAgainC">再玩一次</button> <button class="pbtn gray big" id="skOk">好</button>'}</div>`;
+      $('skwrap').appendChild(box);
+      const stop = v => { cancelAnimationFrame(raf); res(v); };
+      if (net) { $('skAgain').onclick = () => stop({ win, again: true }); $('skLeave').onclick = () => stop({ win, again: false }); }
+      else { $('skOk').onclick = () => stop(win); $('skAgainC').onclick = () => { cancelAnimationFrame(raf); skPlay(o).then(res); }; }
+    }
+    $('skQuit').onclick = async () => { if (ended) return; if (started && !(await askBox({ title: '離開對戰', text: '確定要離開嗎？這一場會算輸。', ok: '離開' }))) return; finish(true); };
+    window.__sk = { get st() { return st; }, get cur() { return cur; }, finish, mine, R, hist, used, localIn };
+  });
+}
+
+// =====================================================================
+//  寶石炸彈陣的連線：每個人只送「按鍵有變的時候」＋每 0.25 秒一次心跳
+
+const skRoom = {
+  async create() {
+    if (!(await tbNet.init())) return;
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid();
+    let code = null;
+    for (let i = 0; i < 8 && !code; i++) {
+      const c = String(1000 + Math.floor(Math.random() * 9000));
+      let r;
+      try { r = await D.runTransaction(D.ref(db, `sk/rooms/${c}`), cur => (cur && cur.host) ? undefined : { host: uid, hn: me.name, st: 'lobby', round: 0, cpu: true, lv: 1, q: skQDefault(), pl: { [uid]: { n: me.name, s: 0 } }, ts: Date.now() }); }
+      catch (e) { console.warn(e); return toast(`開房失敗（${e.code || e.message}），請老師確認已經部署`, 4000); }
+      if (r.committed) code = c;
+    }
+    if (!code) return toast('現在房間太多了，等一下再試');
+    D.onDisconnect(D.ref(db, `sk/rooms/${code}`)).remove();
+    return this.loop(code, true, 0);
+  },
+  async join() {
+    if (!(await tbNet.init())) return;
+    const code = await askBox({ title: '🔑 加入房間', text: '輸入朋友給你的 4 位數房號', input: true, ok: '加入' });
+    if (!code) return;
+    if (!/^\d{4}$/.test(code.trim())) return toast('房號是 4 個數字喔');
+    const c = code.trim(), D = tbNet.D, db = tbNet.db;
+    let snap;
+    try { snap = await D.get(D.ref(db, `sk/rooms/${c}`)); }
+    catch (e) { console.warn(e); return toast(`對戰伺服器連不上（${e.code || e.message}），請老師確認已經部署`, 4000); }
+    if (!snap.exists()) {
+      for (const g2 of ['tb', 'pv', 'sg', 'bb', 'bm', 'sm', 'xq']) {
+        let ok = false; try { ok = (await D.get(D.ref(db, `${g2}/rooms/${c}`))).exists(); } catch (e) {}
+        if (ok) {
+          toast(`這是「${netRoom.NAME[g2]}」的房間，請到那個遊戲輸入房號`, 3500);
+          return;
+        }
+      }
+      return toast('找不到這個房間，確認房號再試一次');
+    }
+    return this.joinCode(c);
+  },
+  async joinCode(c) {
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid(), base = `sk/rooms/${c}`;
+    let why = '加入失敗，再試一次', r;
+    try {
+      r = await D.runTransaction(D.ref(db, base), cur => {
+        if (!cur) return cur;
+        if (!cur.host || cur.closed) { why = '找不到這個房間，確認房號再試一次'; return undefined; }
+        cur.pl = cur.pl || {};
+        if (cur.host === uid) { why = '不能加入自己開的房間（要用不同帳號）'; return undefined; }
+        if (cur.pl[uid]) return cur;
+        const taken = Object.values(cur.pl).map(p => p.s);
+        const s = [0, 1, 2, 3].find(k => !taken.includes(k));
+        if (s === undefined) { why = '這個房間已經滿了（最多 4 人）'; return undefined; }
+        cur.pl[uid] = { n: me.name, s }; return cur;
+      });
+    } catch (e) { console.warn(e); return toast(`加入失敗（${e.code || e.message}）`, 4000); }
+    const v = r.snapshot.val();
+    if (!r.committed || !v || !v.pl || !v.pl[uid]) return toast(why);
+    D.onDisconnect(D.ref(db, `${base}/pl/${uid}`)).remove();
+    D.push(D.ref(db, `${base}/chat`), { sys: 1, t: `${me.name} 進入房間`, ts: Date.now() });
+    return this.loop(c, false, v.round || 0);
+  },
+  async loop(code, host, round) {
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid(), base = `sk/rooms/${code}`;
+    // 斷線 15 秒內回來，房間還在（見 roomKeep）
+    const K = roomKeep(base, host, { has: v => !!(v.pl && v.pl[uid]), join: cur => { cur.pl = cur.pl || {}; if (cur.pl[uid]) return false; const taken = Object.values(cur.pl).map(p => p.s), s = [0, 1, 2, 3].find(k => !taken.includes(k)); if (s === undefined) return false; cur.pl[uid] = { n: me.name, s }; return true; },
+      arm: () => D.onDisconnect(D.ref(db, `${base}/pl/${uid}`)).remove() });
+    let last = round;
+    for (;;) {
+      const go = await this.lobby(code, host, last);
+      if (!go) break;
+      last = go.round;
+      const mySlot = go.roster.findIndex(r => r.u === uid);
+      if (typeof gameChat !== 'undefined') gameChat.open(base);   // 遊戲中也能聊天
+      const r = await skPlay({ mode: 'net', q: go.q, roster: go.roster, mySlot, seed: go.seed, startAt: go.startAt, net: bmNet(tbNet.play('sk', code, go.round), uid, go.roster, mySlot, host) });
+      if (typeof gameChat !== 'undefined') gameChat.close();
+      if (!r || !r.again) break;
+      if (host) D.update(D.ref(db, base), { st: 'lobby' });
+    }
+    const alive = K.alive;
+    if (host) K.close();
+    else { K.stop(); if (alive) { D.push(D.ref(db, `${base}/chat`), { sys: 1, t: `${me.name} 離開房間`, ts: Date.now() }); D.remove(D.ref(db, `${base}/pl/${uid}`)); } }
+    tbNet.idle();
+  },
+  lobby(code, host, lastRound) {
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid(), base = `sk/rooms/${code}`, roomRef = D.ref(db, base);
+    return new Promise(res => {
+      UI.busy = true; world.active = false;
+      $('ov').innerHTML = `<div class="lobby px" id="lobby">
+        <h2>${netRoom.NAME.sk}　<span class="lbcode">房號 <b>${code}</b></span></h2>
+        <div class="lbplayers bm4" id="lbPs"></div>
+        <div class="bmopt" id="lbOpt"></div>
+        <div class="lbchat"><div class="lblog" id="lbLog"></div>
+          <div class="lbin"><input id="lbMsg" maxlength="40" placeholder="輸入訊息，按 Enter 送出" autocomplete="off"><button class="pbtn small" id="lbSend">送出</button></div></div>
+        <div class="lbbtns">${host ? '<button class="pbtn green big" id="lbStart" disabled>開始</button>' : '<button class="pbtn blue big" id="lbReady">準備</button>'}<button class="pbtn gray" id="lbLeave">離開房間</button></div>
+        <p class="tbsub" id="lbTip"></p></div>`;
+      let done = false, room = null, busy = false;
+      const subs = [];
+      const end = val => { if (done) return; done = true; subs.forEach(f => f()); res(val); };
+      const log = $('lbLog');
+      subs.push(D.onChildAdded(D.ref(db, `${base}/chat`), s => {
+        const m = s.val(); if (!m) return;
+        const d = document.createElement('div'); d.className = m.sys ? 'lbsys' : 'lbline';
+        d.innerHTML = m.sys ? esc(m.t) : `<b>${esc(m.n || '')}</b>：${esc(m.t || '')}`;
+        log.appendChild(d); while (log.children.length > 60) log.firstChild.remove(); log.scrollTop = log.scrollHeight;
+      }));
+      const send = () => { const t = $('lbMsg').value.trim().slice(0, 40); if (!t || chatMuted()) return; $('lbMsg').value = ''; D.push(D.ref(db, `${base}/chat`), { n: me.name, t, ts: Date.now() }); };
+      $('lbSend').onclick = send; subs.push(chatGuard($('lbMsg'), $('lbSend'), log));
+      $('lbMsg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); send(); } });
+      $('lbLeave').onclick = () => end(null);
+      const people = v => Object.entries(v.pl || {}).map(([u, p]) => ({ u, n: p.n, s: p.s, r: !!p.r })).sort((a, b) => a.s - b.s);
+      const canStart = v => { const ps = people(v), others = ps.filter(p => p.u !== v.host); return others.every(p => p.r) && (ps.length >= 2 || v.cpu); };
+      if (host) {
+        $('lbOpt').innerHTML = `<label><input type="checkbox" id="lbCpu"> 🤖 電腦補位（空位由電腦加入）</label>
+          <select id="lbLv"><option value="0">新手電腦</option><option value="1">普通電腦</option><option value="2">高手電腦</option></select>
+          <label>題目 <select id="lbQ">${SK.Q.map((x, k) => `<option value="${k}">${x.name}</option>`).join('')}</select></label>`;
+        $('lbQ').onchange = () => { D.update(roomRef, { q: +$('lbQ').value }); try { localStorage.setItem('sk_q', $('lbQ').value); } catch (e) {} };
+        $('lbCpu').onchange = () => D.update(roomRef, { cpu: $('lbCpu').checked });
+        $('lbLv').onchange = () => D.update(roomRef, { lv: +$('lbLv').value });
+      }
+      if (!host) $('lbReady').onclick = () => { const r = !(room && room.pl && room.pl[uid] && room.pl[uid].r); D.update(roomRef, { [`pl/${uid}/r`]: r || null }); };
+      else $('lbStart').onclick = async () => {
+        if (!room || !canStart(room) || busy) return;
+        busy = true; $('lbStart').disabled = true; $('lbTip').textContent = '準備開始……';
+        const ps = people(room), roster = ps.map(p => ({ u: p.u, n: p.n }));
+        if (room.cpu) while (roster.length < 4) roster.push({ bot: 1, lv: room.lv || 0 });
+        const round = (room.round || 0) + 1, start = tbNet.now() + 3500, seed = (Math.random() * 1e9) | 0;
+        const q = room.q || 0;
+        const up = { st: 'go', round, start, seed, ro: roster, q };
+        ps.forEach(p => { up[`pl/${p.u}/r`] = null; });
+        await D.update(roomRef, up);
+        end({ round, roster, startAt: start - tbNet.off, seed, q });
+      };
+      const RG = roomWait(() => { toast('房主離開了，房間關閉'); end(null); });
+      subs.push(() => RG.stop());
+      subs.push(D.onValue(roomRef, s => {
+        const v = s.val(); if (done) return;
+        if (v && v.closed) { toast('房主離開了，房間關閉'); end(null); return; }
+        if (!v || !v.host) { if (!host) RG.lost(); return; }   // 房主斷線：等他 15 秒
+        RG.back();
+        if (!host && !(v.pl && v.pl[uid])) return;   // 自己斷線被拿掉：會自動補回去
+        room = v;
+        const ps = people(v), bots = v.cpu ? 4 - ps.length : 0;
+        let html = ps.map((p, i) => `<div class="lbp" style="border-color:${SK.COL[i]}"><div class="lbn" style="color:${SK.COL[i]}">${p.u === v.host ? '👑 ' : ''}${esc(p.n)}</div><div class="lbs ${p.u === v.host || p.r ? 'on' : ''}">${p.u === v.host ? '房主' : p.r ? '✅ 準備好了' : '還沒準備'}</div></div>`).join('');
+        for (let i = ps.length; i < 4; i++) html += i < ps.length + bots ? `<div class="lbp" style="border-color:${SK.COL[i]}"><div class="lbn" style="color:${SK.COL[i]}">🤖 電腦${SK.CNAME[i]}</div><div class="lbs on">${['新手', '普通', '高手'][v.lv || 0]}</div></div>` : '<div class="lbp"><div class="lbn wait">空位</div><div class="lbs">等朋友加入</div></div>';
+        $('lbPs').innerHTML = html;
+        if (host) {
+          $('lbCpu').checked = !!v.cpu; $('lbLv').value = String(v.lv || 0); $('lbLv').disabled = !v.cpu; $('lbQ').value = String(v.q || 0);
+          $('lbStart').disabled = !canStart(v) || busy;
+          if (!busy) $('lbTip').textContent = ps.length < 2 && !v.cpu ? '等朋友輸入房號加入，或打開「電腦補位」' : canStart(v) ? '大家都準備好了，按「開始」！' : '等大家按「準備」';
+        } else {
+          $('lbOpt').innerHTML = `<span class="tbsub">電腦補位：${v.cpu ? '開（' + ['新手', '普通', '高手'][v.lv || 0] + '）' : '關'}　題目：${SK.Q[v.q || 0].name}</span>`;
+          const r = !!(v.pl[uid] && v.pl[uid].r);
+          $('lbReady').textContent = r ? '取消準備' : '準備'; $('lbReady').className = 'pbtn big ' + (r ? 'gray' : 'blue');
+          $('lbTip').textContent = r ? '等房主按「開始」' : '準備好就按「準備」';
+          if ((v.round || 0) > lastRound && v.st === 'go' && v.start && v.seed != null && v.ro) end({ round: v.round, roster: v.ro, startAt: v.start - tbNet.off, seed: v.seed, q: v.q || 0 });
+        }
+      }));
+    });
+  }
+};
+['create', 'join', 'joinCode'].forEach(k => { const f = skRoom[k]; skRoom[k] = async function (...a) { try { return await f.apply(this, a); } finally { tbNet.idle(); } }; });
+
+
+// ---------- 主選單 ----------
+// 題目預設：照年級（三年級 3 個字母、四年級 4 個、五六年級 5 個）；上次選過的優先
+function skQDefault() {
+  try { const v = localStorage.getItem('sk_q'); if (v != null && SK.Q[+v]) return +v; } catch (e) {}
+  const g = me && me.grade || 3; return g <= 3 ? 0 : g === 4 ? 1 : 2;
+}
+function skOpen() {
+  if (!me || B.st || UI.busy) return;
+  if (typeof tbAllowed === 'function' && !tbAllowed()) return toast('老師目前沒有開放對戰遊戲喔！');
+  world.active = false; UI.busy = true;
+  const online = typeof netRoom !== 'undefined' && typeof tbNet !== 'undefined' && tbNet.ready();
+  $('ov').innerHTML = `<div class="tbmenu px"><h2> 字母蛇</h2>
+    <p class="tbsub"><b>方向鍵</b>（或 W A S D）轉彎。看左邊的題目，<b>照順序吃</b>字母或注音，拼出那個字！<br>吃對 ＋1 分、拼完一個字再 ＋10 分；吃錯會變短；撞到牆或別的蛇會暈 2 秒。<br>2 分 30 秒後分數最高的人獲勝！</p>
+    <div class="tbbtns" id="skBtns">
+      ${online ? `<button class="pbtn green big" id="skCreate">🏠 開房間（2～4 人）</button><button class="pbtn blue big" id="skJoin">🔑 輸入房號加入</button>` : ''}
+      <button class="pbtn big" id="skCpu">🤖 跟電腦對戰</button>
+      <button class="pbtn gray" id="skBack">↩ 回到冒險</button></div>
+    ${online ? '' : '<p class="tbsub">多人開房要在連線版才能玩。</p>'}</div>`;
+  $('skBack').onclick = () => { $('ov').innerHTML = ''; UI.busy = false; world.active = true; updateHUD(); };
+  $('skCpu').onclick = () => {
+    let n = 2, q = skQDefault();
+    const draw = () => {
+      $('skBtns').innerHTML = `<p class="tbsub" style="margin:0">電腦人數：
+        ${[1, 2, 3].map(k => `<button class="pbtn small ${k === n ? 'green' : 'gray'}" style="width:76px" data-n="${k}">${k} 個</button>`).join(' ')}</p>
+        <p class="tbsub" style="margin:0">題目：${SK.Q.map((x, k) => `<button class="pbtn small ${k === q ? 'green' : 'gray'}" style="width:150px" data-q="${k}">${x.name}</button>`).join(' ')}</p>
+        <p class="tbsub" style="margin:0;min-height:1.4em">${SK.Q[q].tip}</p>
+        <button class="pbtn green big" data-lv="0">🐢 新手電腦</button><button class="pbtn blue big" data-lv="1">🐇 普通電腦</button><button class="pbtn big" data-lv="2">🐉 高手電腦</button>
+        <button class="pbtn gray" id="skLvBack">返回</button>`;
+      $('skBtns').querySelectorAll('[data-n]').forEach(b => b.onclick = () => { n = +b.dataset.n; draw(); });
+      $('skBtns').querySelectorAll('[data-q]').forEach(b => b.onclick = () => { q = +b.dataset.q; try { localStorage.setItem('sk_q', q); } catch (e) {} draw(); });
+      $('skBtns').querySelectorAll('[data-lv]').forEach(b => b.onclick = () => skPlay({ mode: 'cpu', level: +b.dataset.lv, bots: n, q }).then(skOpenAgain));
+      $('skLvBack').onclick = skOpenAgain;
+    };
+    draw();
+  };
+  const hide = () => { const m = document.querySelector('.tbmenu'); if (m) m.style.display = 'none'; };
+  if (online) {
+    $('skCreate').onclick = () => (hide(), skRoom.create()).then(skOpenAgain);
+    $('skJoin').onclick = () => (hide(), skRoom.join()).then(skOpenAgain);
+  }
+}
+function skOpenAgain() { UI.busy = false; world.active = false; $('ov').innerHTML = ''; skOpen(); }
+(() => {
+  const st = document.createElement('style');
+  st.textContent = `
+.skwrap{background:#1b2a14}.skside{width:190px}
+.skpl{min-height:118px}.skw{display:flex;gap:3px;flex-wrap:wrap;margin:4px 0 2px}.skw i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:26px;height:28px;border:2px solid #3a2a1a;background:#fff;font-weight:900;font-size:18px;color:#9a8a7a}
+.skw i.ok{background:#6abe30;color:#fff}.skw i.nx{background:#fff3a8;color:#2b1d14;border-color:#e0a800;box-shadow:0 0 0 2px #e0a800}
+.skm{font-weight:900;font-size:16px;color:#5a3a1a}.sks{font-weight:800;font-size:14px}.skclock{min-width:90px;text-align:center}`;
+  document.head.appendChild(st);
+})();
+
+// =====================================================================
+//  泡泡迷宮戰：2～4 人在迷宮裡，斜上方俯視，用自己的像素造型互相吹泡泡
+//  ‧W A S D（或方向鍵）走路、滑鼠瞄準、空白鍵或滑鼠左鍵吹泡泡
+//  ‧被泡泡包住 3 秒，之後回到出發點，有 2 秒保護（保護中吹泡泡，保護就結束）
+//  ‧包住別人 +1 分，最後 30 秒 +2 分；2 分鐘後分數最高的贏，同分比誰被包住比較少
+//  ‧各自為戰（最多 4 人）或 2 對 2（同隊不會包到彼此，隊伍分數加起來比）
+//  ‧整場用固定步驟模擬（每秒 20 步、全部整數），電腦也在模擬裡算，
+//    連線時跟寶石炸彈陣用同一套方式（只送按鍵），每台電腦算出來的結果一樣
+// =====================================================================
+const MZ = {
+  N: 17, U: 1024, TPS: 20, TIME: 120 * 20, LAST: 30 * 20, TRAP: 60, INV: 40, CD: 12,
+  SPD: 120, BSPD: 300, BLIFE: 44, R: 250, HITR: 430, NA: 256,
+  COL: ['#e04f3f', '#3a6fd8', '#6abe30', '#ffd23f'], TCOL: ['#e04f3f', '#3a6fd8', '#3ac6e0', '#ff8a3d'],
+  CNAME: ['紅', '藍', '綠', '黃'], TNAME: ['紅隊', '藍隊'],
+  START: [[1, 1, 32], [15, 15, 160], [15, 1, 96], [1, 15, 224]]
+};
+const MZI = { F: 1, B: 2, SL: 4, SR: 8, FIRE: 16, ABS: 32, U: 1, D: 2, L: 4, R: 8 };   // ABS：上下左右是畫面方向（玩家）；沒有 ABS：前後左右是面向的方向（電腦）
+MZ.COS = Array.from({ length: MZ.NA }, (_, a) => Math.round(Math.cos(a * Math.PI * 2 / MZ.NA) * 1024));
+MZ.SIN = Array.from({ length: MZ.NA }, (_, a) => Math.round(Math.sin(a * Math.PI * 2 / MZ.NA) * 1024));
+const mzTeam = (st, i) => st.tm ? (i === 0 || i === 3 ? 0 : 1) : i;
+const mzCol = (st, i) => (st.tm ? MZ.TCOL : MZ.COL)[i];
+const mzRand = st => (st.r = (Math.imul(st.r, 1103515245) + 12345) & 0x7fffffff) / 0x80000000;
+const mzRi = (st, n) => Math.floor(mzRand(st) * n) % n;
+const mzWall = (st, cx, cy) => cx < 0 || cy < 0 || cx >= MZ.N || cy >= MZ.N || st.m[cy * MZ.N + cx] > 0;
+// 地圖：外圍是牆，裡面每隔一格一根柱子，再隨機把柱子往旁邊延長；上下左右對稱，四個角落一樣公平
+function mzMap(st) {
+  const N = MZ.N, m = new Array(N * N).fill(0), H = (N - 1) / 2;
+  const set = (x, y, v) => { [[x, y], [N - 1 - x, y], [x, N - 1 - y], [N - 1 - x, N - 1 - y]].forEach(([a, b]) => { m[b * N + a] = v; }); };
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (x === 0 || y === 0 || x === N - 1 || y === N - 1) m[y * N + x] = 1;
+  for (let y = 2; y <= H; y += 2) for (let x = 2; x <= H; x += 2) if (!(x === H && y === H)) set(x, y, 1);
+  const open = () => {   // 所有空地都走得到
+    const seen = new Uint8Array(N * N), q = [N + 1]; seen[N + 1] = 1; let n = 1;
+    while (q.length) { const c = q.pop(); for (const d of [1, -1, N, -N]) { const k = c + d; if (!m[k] && !seen[k]) { seen[k] = 1; n++; q.push(k); } } }
+    return n === m.filter(v => !v).length;
+  };
+  for (let k = 0; k < 14; k++) {
+    const x = 2 + 2 * mzRi(st, H / 2), y = 2 + 2 * mzRi(st, H / 2), d = mzRi(st, 4);
+    const nx = x + [1, 0, -1, 0][d], ny = y + [0, 1, 0, -1][d];
+    if (nx < 1 || ny < 1 || nx > H || ny > H || (nx <= 2 && ny <= 2) || m[ny * N + nx]) continue;
+    if (nx === H || ny === H) continue;   // 中間的十字大路保持暢通
+    set(nx, ny, 1); if (!open()) set(nx, ny, 0);
+  }
+  // 牆的樣子（只影響畫面）
+  for (let i = 0; i < N * N; i++) if (m[i]) { const x = i % N, y = (i / N) | 0; m[i] = (x === 0 || y === 0 || x === N - 1 || y === N - 1) ? 1 : 2 + ((Math.min(x, N - 1 - x) * 3 + Math.min(y, N - 1 - y) * 5) % 2); }
+  return m;
+}
+function mzSpawn(st, p, i, far) {
+  let k = i;
+  if (far) {   // 找離敵人最遠的角落
+    let best = -1;
+    MZ.START.forEach((s, j) => {
+      let d = 1e9; st.p.forEach((q, e) => { if (e === i || q.out || q.trap || mzTeam(st, e) === mzTeam(st, i)) return; const dx = q.x - (s[0] * MZ.U + 512), dy = q.y - (s[1] * MZ.U + 512); d = Math.min(d, dx * dx + dy * dy); });
+      if (d > best) { best = d; k = j; }
+    });
+  }
+  const s = MZ.START[k]; p.x = s[0] * MZ.U + 512; p.y = s[1] * MZ.U + 512; p.a = s[2];
+}
+function mzNew(seed, roster, tm = 0) {
+  const st = { r: (seed >>> 0) % 0x7fffffff || 7, t: 0, over: -1, tm: tm ? 1 : 0, p: [], b: [] };
+  st.m = mzMap(st);
+  roster.forEach((ro, i) => { const p = { x: 0, y: 0, a: 0, sc: 0, hit: 0, trap: 0, inv: 0, cd: 0, out: 0, bot: ro.bot ? 1 : 0, lv: ro.lv || 0, by: -1, wob: 0, ae: 0, shots: 0, mv: -99, lk: ro.lk == null ? -1 : ro.lk | 0 }; mzSpawn(st, p, i); st.p.push(p); });
+  return st;
+}
+function mzClone(s) { return { ...s, p: s.p.map(p => ({ ...p })), b: s.b.map(x => ({ ...x })) }; }
+// 移動：先 x 再 y，撞牆的那個方向不動（可以沿著牆滑）
+function mzMove(st, p, dx, dy) {
+  const R = MZ.R, U = MZ.U, hit = (x, y) => mzWall(st, Math.floor((x - R) / U), Math.floor((y - R) / U)) || mzWall(st, Math.floor((x + R) / U), Math.floor((y - R) / U)) || mzWall(st, Math.floor((x - R) / U), Math.floor((y + R) / U)) || mzWall(st, Math.floor((x + R) / U), Math.floor((y + R) / U));
+  if (dx && !hit(p.x + dx, p.y)) p.x += dx;
+  if (dy && !hit(p.x, p.y + dy)) p.y += dy;
+}
+// 兩點之間有沒有牆擋住
+function mzSee(st, x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0, n = Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 200);
+  for (let k = 1; k < n; k++) if (mzWall(st, Math.floor((x0 + Math.trunc(dx * k / n)) / MZ.U), Math.floor((y0 + Math.trunc(dy * k / n)) / MZ.U))) return false;
+  return true;
+}
+// 朝向 (dx, dy) 的角度（0～255），用查表找，不用 atan2，每台電腦一定一樣
+function mzAng(dx, dy) { let best = 0, bv = -Infinity; for (let a = 0; a < MZ.NA; a++) { const v = dx * MZ.COS[a] + dy * MZ.SIN[a]; if (v > bv) { bv = v; best = a; } } return best; }
+const mzDiff = (a, b) => ((b - a + 384) & 255) - 128;
+function mzStep(st, ins, ev) {
+  if (st.over !== -1) { st.t++; return; }
+  st.t++;
+  const U = MZ.U;
+  st.p.forEach((p, i) => {
+    let v = p.bot ? mzBot(st, i) : ins[i];
+    if (v < 0) { if (!p.out) { p.out = 1; ev && ev.push({ t: 'out', i }); } return; }
+    if (p.out) return;
+    if (p.cd) p.cd--;
+    if (p.wob) p.wob--;
+    if (p.trap) {
+      if (--p.trap === 0) { mzSpawn(st, p, i, true); p.inv = MZ.INV; ev && ev.push({ t: 'back', i }); }
+      return;
+    }
+    if (p.inv) p.inv--;
+    const ang = (v >> 8) & 511; if (ang) p.a = (ang - 1) & 255;
+    const c = MZ.COS[p.a], s = MZ.SIN[p.a];
+    let fx = 0, fy = 0;
+    if (v & MZI.ABS) { if (v & MZI.U) fy -= 1024; if (v & MZI.D) fy += 1024; if (v & MZI.L) fx -= 1024; if (v & MZI.R) fx += 1024; }
+    else {
+      if (v & MZI.F) { fx += c; fy += s; } if (v & MZI.B) { fx -= c; fy -= s; }
+      if (v & MZI.SL) { fx += s; fy -= c; } if (v & MZI.SR) { fx -= s; fy += c; }
+    }
+    if (fx || fy) {
+      const diag = (v & MZI.ABS) ? (fx && fy ? 724 : 1024) : (fx && fy && (v & (MZI.F | MZI.B)) && (v & (MZI.SL | MZI.SR))) ? 724 : 1024;   // 斜著走不會比較快
+      p.mv = st.t;
+      mzMove(st, p, Math.trunc(fx * MZ.SPD * diag / 1048576), Math.trunc(fy * MZ.SPD * diag / 1048576));
+    }
+    if ((v & MZI.FIRE) && !p.cd) {
+      p.cd = MZ.CD; p.inv = 0; p.shots++;
+      st.b.push({ x: p.x + Math.trunc(c * MZ.R / 1024), y: p.y + Math.trunc(s * MZ.R / 1024), vx: Math.trunc(c * MZ.BSPD / 1024), vy: Math.trunc(s * MZ.BSPD / 1024), o: i, l: MZ.BLIFE });
+      ev && ev.push({ t: 'shot', i });
+    }
+  });
+  // 泡泡飛行
+  st.b = st.b.filter(b => {
+    for (let k = 0; k < 2; k++) {   // 分兩半走，比較不會穿過人
+      b.x += b.vx >> 1; b.y += b.vy >> 1;
+      if (mzWall(st, Math.floor(b.x / U), Math.floor(b.y / U))) { ev && ev.push({ t: 'pop', x: b.x - b.vx / 2, y: b.y - b.vy / 2, o: b.o }); return false; }
+      for (let j = 0; j < st.p.length; j++) {
+        const q = st.p[j];
+        if (j === b.o || q.out || q.trap || q.inv || mzTeam(st, j) === mzTeam(st, b.o)) continue;
+        const dx = q.x - b.x, dy = q.y - b.y;
+        if (dx * dx + dy * dy < MZ.HITR * MZ.HITR) {
+          const pt = st.t > MZ.TIME - MZ.LAST ? 2 : 1;
+          q.trap = MZ.TRAP; q.hit++; q.by = b.o; st.p[b.o].sc += pt;
+          ev && ev.push({ t: 'hit', i: b.o, j, pt });
+          return false;
+        }
+      }
+    }
+    if (--b.l <= 0) { ev && ev.push({ t: 'pop', x: b.x, y: b.y, o: b.o }); return false; }
+    return true;
+  });
+  if (st.t >= MZ.TIME) st.over = mzWinner(st);
+}
+// 勝負：各自為戰比個人分數，同分比被包住次數；2 對 2 比隊伍總分（回傳 10＋隊伍）
+function mzWinner(st) {
+  const live = st.p.map((p, i) => i).filter(i => !st.p[i].out);
+  if (!live.length) return -2;
+  if (st.tm) {
+    const T = [0, 1].map(t => live.filter(i => mzTeam(st, i) === t)), sc = T.map(a => a.reduce((s, i) => s + st.p[i].sc, 0)), ht = T.map(a => a.reduce((s, i) => s + st.p[i].hit, 0));
+    if (!T[0].length) return 11; if (!T[1].length) return 10;
+    if (sc[0] !== sc[1]) return sc[0] > sc[1] ? 10 : 11;
+    if (ht[0] !== ht[1]) return ht[0] < ht[1] ? 10 : 11;
+    return -2;
+  }
+  const r = live.sort((a, b) => st.p[b].sc - st.p[a].sc || st.p[a].hit - st.p[b].hit);
+  if (r.length > 1 && st.p[r[0]].sc === st.p[r[1]].sc && st.p[r[0]].hit === st.p[r[1]].hit) return -2;
+  return r[0];
+}
+function mzRank(st) { return st.p.map((p, i) => i).sort((a, b) => st.p[b].sc - st.p[a].sc || st.p[a].hit - st.p[b].hit); }
+// ---------- 電腦 ----------
+const MZ_LV = [{ turn: 3, err: 10, fire: .12, see: 6 }, { turn: 5, err: 5, fire: .3, see: 9 }, { turn: 9, err: 2, fire: .6, see: 14 }];
+function mzBot(st, i) {
+  const p = st.p[i], L = MZ_LV[p.lv] || MZ_LV[0], U = MZ.U, N = MZ.N;
+  if (p.trap || p.out) return 0;
+  // 目標：最近的敵人
+  let tg = -1, td = 1e18;
+  st.p.forEach((q, j) => { if (j === i || q.out || q.trap || mzTeam(st, j) === mzTeam(st, i)) return; const dx = q.x - p.x, dy = q.y - p.y, d = dx * dx + dy * dy; if (d < td) { td = d; tg = j; } });
+  let v = 0, want = p.a;
+  if (tg >= 0) {
+    const q = st.p[tg], see = td < (L.see * U) ** 2 && mzSee(st, p.x, p.y, q.x, q.y);
+    if (see) {
+      want = mzAng(q.x - p.x, q.y - p.y);
+      if (!p.wob) { p.wob = 10 + mzRi(st, 10); p.ae = mzRi(st, L.err * 2 + 1) - L.err; }   // 每隔一段時間重新決定瞄準的偏差
+      want = (want + p.ae) & 255;
+      const off = Math.abs(mzDiff(p.a, want));
+      if (off <= 6 && !p.cd && mzRand(st) < L.fire) v |= MZI.FIRE;
+      if (td > (3 * U) ** 2) v |= MZI.F; else if (td < (1.5 * U) ** 2) v |= MZI.B;
+      v |= ((st.t >> 4) + i) & 1 ? MZI.SL : MZI.SR;
+    } else {
+      // 沿著最短路走過去
+      const from = Math.floor(p.y / U) * N + Math.floor(p.x / U), to = Math.floor(q.y / U) * N + Math.floor(q.x / U);
+      const prev = new Int16Array(N * N).fill(-1); prev[to] = to; const qq = [to];
+      for (let h = 0; h < qq.length && prev[from] < 0; h++) { const c = qq[h]; for (const d of [1, -1, N, -N]) { const k = c + d; if (!st.m[k] && prev[k] < 0) { prev[k] = c; qq.push(k); } } }
+      const nx = prev[from] >= 0 && prev[from] !== from ? prev[from] : to;
+      const gx = (nx % N) * U + 512, gy = ((nx / N) | 0) * U + 512;
+      want = mzAng(gx - p.x, gy - p.y);
+      if (Math.abs(mzDiff(p.a, want)) < 40) v |= MZI.F;
+      // 偏離格子中心太多：往中心修正
+      const cx = Math.floor(p.x / U) * U + 512, cy = Math.floor(p.y / U) * U + 512;
+      if (Math.abs(gx - cx) > 0 && Math.abs(p.y - cy) > 160) { const d2 = mzDiff(p.a, mzAng(0, cy - p.y)); v |= d2 > 0 ? MZI.SR : MZI.SL; }
+      if (Math.abs(gy - cy) > 0 && Math.abs(p.x - cx) > 160) { const d2 = mzDiff(p.a, mzAng(cx - p.x, 0)); v |= d2 > 0 ? MZI.SR : MZI.SL; }
+    }
+  }
+  const d = mzDiff(p.a, want), a = (p.a + Math.max(-L.turn, Math.min(L.turn, d))) & 255;
+  return v | ((a + 1) << 8);
+}
+// ---------- 畫面：斜上方俯視，鏡頭跟著自己，像素放大 ----------
+function mzScene(cv, W = 480, H = 300) {
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  const T = 30, WH = 16;   // 一格幾點、牆有多高
+  const looks = {};
+  const spr = lk => looks[lk] || (looks[lk] = heroSprites(lk));
+  // 地板花紋（整張先畫好）
+  const N = MZ.N, flo = document.createElement('canvas'); flo.width = flo.height = N * T;
+  { const f = flo.getContext('2d');
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      f.fillStyle = (x + y) % 2 ? '#8cc86a' : '#96d074'; f.fillRect(x * T, y * T, T, T);
+      if ((x * 7 + y * 11) % 5 === 0) { f.fillStyle = '#7ab85a'; f.fillRect(x * T + 8, y * T + 18, 3, 5); f.fillRect(x * T + 13, y * T + 16, 3, 7); }
+      if ((x * 5 + y * 3) % 9 === 0) { f.fillStyle = '#fff3a8'; f.fillRect(x * T + 20, y * T + 8, 3, 3); }
+    } }
+  const WALLC = { 1: ['#7a5a3a', '#5a4030', '#4a3020'], 2: ['#a8b2c2', '#7a8494', '#5a6474'], 3: ['#d09a5a', '#a06a32', '#7a4a22'] };
+  // view：{ me, aim（弧度）, prev, lerp, names }，回傳 { ox, oy } 讓滑鼠換算位置
+  return (st, view) => {
+    const U = MZ.U, k = view.lerp == null ? 1 : view.lerp, L = (a, b) => a + (b - a) * k;
+    const pos = i => { const q = st.p[i], qp = view.prev && view.prev.p[i]; const ok = qp && Math.abs(qp.x - q.x) < 600 && Math.abs(qp.y - q.y) < 600; return [(ok ? L(qp.x, q.x) : q.x) / U * T, (ok ? L(qp.y, q.y) : q.y) / U * T]; };
+    const [mx, my] = pos(view.me);
+    const ox = Math.round(Math.max(-40, Math.min(N * T + 40 - W, mx - W / 2))), oy = Math.round(Math.max(-60, Math.min(N * T + 20 - H, my - H / 2)));
+    g.fillStyle = '#2a3a2a'; g.fillRect(0, 0, W, H);
+    g.drawImage(flo, -ox, -oy);
+    // 依照列（y）由上往下畫：先畫這一列的牆，再畫站在這一列的人和泡泡
+    const ents = [];
+    st.p.forEach((q, i) => { if (q.out) return; const [x, y] = pos(i); ents.push({ kind: 'p', i, q, x, y }); });
+    st.b.forEach(b => ents.push({ kind: 'b', b, x: (b.x + b.vx * (k - 1)) / U * T, y: (b.y + b.vy * (k - 1)) / U * T }));
+    ents.sort((a, b) => a.y - b.y);
+    // 地上的影子和腳下的圈圈（先畫，才不會蓋住人）
+    ents.forEach(e => {
+      g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(e.x - ox, e.y - oy + (e.kind === 'p' ? 0 : 2), e.kind === 'p' ? 11 : 5, e.kind === 'p' ? 4 : 2, 0, 0, 7); g.fill();
+      if (e.kind === 'p') { g.strokeStyle = mzCol(st, e.i); g.lineWidth = 2; g.beginPath(); g.ellipse(e.x - ox, e.y - oy, 13, 5, 0, 0, 7); g.stroke(); }
+    });
+    // 瞄準線（只有自己）
+    const meP = st.p[view.me];
+    if (meP && !meP.trap && !meP.out && view.aim != null) {
+      g.fillStyle = 'rgba(255,255,255,.75)';
+      for (let d = 22; d < 70; d += 9) g.fillRect(Math.round(mx - ox + Math.cos(view.aim) * d) - 1, Math.round(my - oy - 10 + Math.sin(view.aim) * d) - 1, 3, 3);
+    }
+    let ei = 0;
+    const r0 = Math.max(0, Math.floor((oy - 40) / T)), r1 = Math.min(N - 1, Math.ceil((oy + H + WH) / T));
+    const drawEnt = e => {
+      const sx = Math.round(e.x - ox), sy = Math.round(e.y - oy);
+      if (sx < -40 || sx > W + 40 || sy < -60 || sy > H + 60) return;
+      if (e.kind === 'b') {
+        const by = sy - 12;
+        g.fillStyle = 'rgba(190,235,255,.7)'; g.beginPath(); g.arc(sx, by, 8, 0, 7); g.fill();
+        g.strokeStyle = mzCol(st, e.b.o); g.lineWidth = 2; g.stroke();
+        g.fillStyle = '#fff'; g.fillRect(sx - 4, by - 5, 3, 3);
+        return;
+      }
+      const q = e.q, i = e.i;
+      if (q.inv && (st.t >> 1) % 2) return;
+      const lk = q.lk >= 0 ? q.lk : i % 4, F = spr(lk);
+      const face = Math.cos(q.a / MZ.NA * Math.PI * 2) < 0 ? 'l' : 'r';
+      const walking = st.t - q.mv < 3 && !q.trap;
+      const fr = q.trap ? 'jump' : walking ? ((st.t >> 2) % 2 ? 'walk1' : 'walk2') : 'stand';
+      const img = F[fr][face], w = img.width * 2, h = img.height * 2, bob = q.trap ? Math.round(Math.sin(st.t / 3) * 2) - 6 : 0;
+      g.drawImage(img, sx - w / 2, sy - h + 2 + bob, w, h);
+      // 手上的泡泡棒
+      if (!q.trap) { const an = q.a / MZ.NA * Math.PI * 2, c0 = Math.cos(an), hx = Math.round(sx + (c0 < 0 ? -1 : 1) * 14 + c0 * 3), hy = Math.round(sy - 10 + Math.sin(an) * 4);
+        g.fillStyle = '#5a3a1a'; g.fillRect(hx - 1, hy, 2, 6); g.fillStyle = mzCol(st, i); g.fillRect(hx - 4, hy - 6, 8, 7); g.fillStyle = '#cdebf7'; g.fillRect(hx - 2, hy - 4, 4, 3); }
+      if (q.trap) {   // 被泡泡包住
+        g.fillStyle = 'rgba(160,220,255,.4)'; g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 2;
+        g.beginPath(); g.arc(sx, sy - h / 2 + bob, h * .62, 0, 7); g.fill(); g.stroke();
+        g.fillStyle = '#fff'; g.fillRect(sx - h * .35, sy - h * .9 + bob, 4, 4);
+      }
+      // 名牌
+      const nm = (view.names && view.names[i]) || '', ty = sy - h - 4 + bob;
+      g.font = '900 11px sans-serif'; g.textAlign = 'center';
+      const tw = g.measureText(nm).width + 6;
+      g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(sx - tw / 2, ty - 10, tw, 13);
+      g.fillStyle = i === view.me ? '#ffd23f' : st.tm ? MZ.TCOL[mzTeam(st, i) ? 1 : 0] : '#fff'; g.fillText(nm, sx, ty);
+      if (st.tm && i !== view.me && mzTeam(st, i) === mzTeam(st, view.me)) { g.fillStyle = '#ffd23f'; g.fillText('隊友', sx, ty - 12); }
+    };
+    for (let ry = r0; ry <= r1; ry++) {
+      for (let x = 0; x < N; x++) {
+        const w = st.m[ry * N + x]; if (!w) continue;
+        const C = WALLC[w] || WALLC[1], sx = x * T - ox, sy = ry * T - oy;
+        if (sx < -T || sx > W) continue;
+        g.fillStyle = C[1]; g.fillRect(sx, sy + T - WH, T, WH);                      // 前面
+        g.fillStyle = C[2]; for (let yy = sy + T - WH + 5; yy < sy + T; yy += 5) g.fillRect(sx, yy, T, 1);
+        g.fillStyle = C[0]; g.fillRect(sx, sy - WH, T, T);                            // 上面
+        g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(sx, sy - WH, T, 2);
+        g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(sx + T - 2, sy - WH, 2, T + WH);
+      }
+      // 這一列的牆畫完，再畫腳站在這一列的人（下一列的牆會擋住他們的腳，看起來就是站在牆後面）
+      while (ei < ents.length && ents[ei].y < (ry + 1) * T) drawEnt(ents[ei++]);
+    }
+    while (ei < ents.length) drawEnt(ents[ei++]);
+    // 自己被包住：畫面蓋一層泡泡
+    if (meP && meP.trap) {
+      g.fillStyle = 'rgba(150,210,255,.28)'; g.fillRect(0, 0, W, H);
+      g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 4; g.beginPath(); g.arc(W / 2, H / 2, H * .6, 0, 7); g.stroke();
+    } else if (meP && meP.inv && (st.t >> 2) % 2) { g.strokeStyle = 'rgba(255,240,120,.8)'; g.lineWidth = 4; g.strokeRect(2, 2, W - 4, H - 4); }
+    return { ox, oy, T };
+  };
+}
+// 小地圖：只看得到自己和隊友
+function mzMini(cv, st, me, ang) {
+  const N = MZ.N, C = 8; cv.width = cv.height = N * C; const g = cv.getContext('2d');
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { g.fillStyle = st.m[y * N + x] ? '#5a4030' : '#e8dcc0'; g.fillRect(x * C, y * C, C, C); }
+  st.p.forEach((p, i) => {
+    if (p.out || (i !== me && (!st.tm || mzTeam(st, i) !== mzTeam(st, me)))) return;
+    const x = p.x / MZ.U * C, y = p.y / MZ.U * C, a = i === me && ang != null ? ang : p.a / MZ.NA * Math.PI * 2;
+    g.fillStyle = mzCol(st, i); g.fillRect(x - 3, y - 3, 7, 7);
+    g.strokeStyle = '#2b1d14'; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * 9, y + Math.sin(a) * 9); g.stroke();
+  });
+}
+
+function mzPlay(o) {
+  return new Promise(res => {
+    const net = o.mode === 'net';
+    const roster0 = net ? o.roster : [{ n: me.name, lk: me.look | 0 }].concat(Array.from({ length: o.bots }, () => ({ bot: 1, lv: o.level })));
+    // 造型：真人用自己的造型，電腦用沒人用的（每台電腦算法一樣）
+    const taken = roster0.filter(r => !r.bot && r.lk != null).map(r => r.lk | 0), free = [0, 1, 2, 3].filter(l => !taken.includes(l));
+    let fi = 0; const roster = roster0.map((r, i) => Object.assign({}, r, { lk: !r.bot && r.lk != null ? r.lk | 0 : free.length ? free[fi++ % free.length] : i % 4 }));
+    const mine = net ? o.mySlot : 0;
+    const names = roster.map((r, i) => r.bot ? `電腦${MZ.CNAME[i]}` : r.n || '玩家');
+    const tm = o.tm ? 1 : 0;
+    let st = mzNew(net ? o.seed : (Math.random() * 1e9) | 0, roster, tm);
+    const k = Math.min((innerHeight - 120) / 300, (innerWidth - 330) / 480);
+    $('ov').innerHTML = `<div class="bmwrap mzwrap px" id="mzwrap">
+      <div class="bmside mzside"><canvas id="mzMini" class="mzmini"></canvas><div id="mzSide"></div></div>
+      <div class="bmstage"><div class="bmtop"><span class="bmmap">${tm ? '2 對 2' : '各自為戰'}</span><span id="mzClock" class="skclock"></span><span id="mzX2" class="mzx2"></span><button class="pbtn small gray" id="mzQuit">離開</button></div>
+        <div class="mzview"><canvas id="mzCv" style="width:${Math.round(480 * k)}px;height:${Math.round(300 * k)}px"></canvas><div class="mzmsg" id="mzMsg"></div><div class="mzhelp">W A S D（或方向鍵）走路　滑鼠瞄準　空白鍵／滑鼠左鍵 吹泡泡　不用滑鼠時，會朝走路的方向吹</div></div>
+        <div class="tbcount" id="mzCount"></div><div class="bmnote" id="mzNote"></div></div></div>`;
+    const draw = mzScene($('mzCv'));
+    let la = st.p[mine].a / MZ.NA * 256, sentA = -1;   // 自己瞄準的方向（0～256）
+    // 輸入：按著就一直有效；吹泡泡按一下也會記住到下一步
+    const keyBit = { KeyW: MZI.U, ArrowUp: MZI.U, KeyS: MZI.D, ArrowDown: MZI.D, KeyA: MZI.L, ArrowLeft: MZI.L, KeyD: MZI.R, ArrowRight: MZI.R, Space: MZI.FIRE, KeyJ: MZI.FIRE };
+    const held = new Set();
+    let fireLatch = 0, mouseFire = 0, started = false, ended = false, raf = 0, mouse = null, mouseT = -1e9, cam = null;
+    const kd = e => {
+      if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); $('mzQuit').click(); return; }
+      if (!(e.code in keyBit)) return;
+      e.preventDefault(); e.stopPropagation();
+      held.add(e.code); if (keyBit[e.code] === MZI.FIRE) fireLatch = 1;
+    };
+    const ku = e => { held.delete(e.code); };
+    const blur = () => { held.clear(); mouseFire = 0; };
+    const cvEl = $('mzCv');
+    const mm = e => { const r = cvEl.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return; mouse = [e.clientX, e.clientY]; mouseT = performance.now(); };
+    const md = e => { if (e.button !== 0) return; mm(e); mouseFire = 1; fireLatch = 1; e.preventDefault(); };
+    const mu = e => { if (e.button === 0) mouseFire = 0; };
+    addEventListener('keydown', kd, true); addEventListener('keyup', ku, true); addEventListener('blur', blur);
+    cvEl.addEventListener('mousedown', md); addEventListener('mouseup', mu); addEventListener('mousemove', mm);
+    // 瞄準：最近 2 秒有動滑鼠就跟著滑鼠；沒有的話朝走路的方向
+    const aimNow = () => {
+      const p = st.p[mine]; if (!p || p.trap) return;
+      if (mouse && cam && performance.now() - mouseT < 2000) {
+        const r = cvEl.getBoundingClientRect(), mx = (mouse[0] - r.left) / r.width * cvEl.width, my = (mouse[1] - r.top) / r.height * cvEl.height;
+        const dx = mx - cam.px, dy = my - cam.py;
+        if (dx * dx + dy * dy > 64) la = ((Math.atan2(dy, dx) / (Math.PI * 2) * 256) + 256) % 256;
+        return;
+      }
+      let v = 0; held.forEach(c => { v |= keyBit[c]; });
+      const dx = (v & MZI.R ? 1 : 0) - (v & MZI.L ? 1 : 0), dy = (v & MZI.D ? 1 : 0) - (v & MZI.U ? 1 : 0);
+      if (dx || dy) la = ((Math.atan2(dy, dx) / (Math.PI * 2) * 256) + 256) % 256;
+    };
+    const sample = f => {
+      let v = MZI.ABS; held.forEach(c => { v |= keyBit[c]; });
+      if (fireLatch || mouseFire) { v |= MZI.FIRE; fireLatch = 0; }
+      aimNow();
+      // 方向每 2 步才更新一次（少送一點資料）
+      const a = Math.round(la) & 255;
+      if (sentA < 0 || f % 2 === 0) sentA = a;
+      return v | ((sentA + 1) << 8);
+    };
+    let flash = 0;
+    const sfx = list => list.forEach(e => {
+      if (e.t === 'shot') { if (e.i === mine) beep(520, .06, 'triangle', .04, 0, 260); }
+      else if (e.t === 'hit') {
+        if (e.i === mine) { SFX.coin(); note(`包住了 ${esc(names[e.j])}！ +${e.pt}`, '#6abe30'); }
+        else if (e.j === mine) { beep(300, .35, 'sine', .05, 0, -200); flash = 1; note(`被 ${esc(names[e.i])} 的泡泡包住了！`, '#3a6fd8'); }
+        else beep(700, .05, 'sine', .02);
+      } else if (e.t === 'pop' && e.o === mine) beep(900, .03, 'sine', .02);
+      else if (e.t === 'back' && e.i === mine) note('回到出發點，有 2 秒保護', '#a8801a');
+    });
+    let noteT = 0;
+    const note = (t, c) => { const m = $('mzMsg'); if (!m) return; m.innerHTML = `<b style="background:${c}">${t}</b>`; m.className = 'mzmsg on'; noteT = performance.now(); };
+    // ---------- 時間軸（連線時用回溯修正） ----------
+    const DELAY = net ? 2 : 0, MAXRB = 24, HB = 4;
+    let cur = 0;                                   // 已經算到第幾步
+    const hist = new Map();                        // 第 f 步之前的狀態
+    const used = new Map();                        // 第 f 步用了哪些輸入
+    const localIn = new Map();                     // 自己在第 f 步的輸入
+    const R = roster.map(() => ({ ch: [], conf: -1, quit: Infinity }));   // 別人：[f, 輸入] 變化紀錄
+    let lastSent = -99, lastSentV = -1, rbFrom = Infinity;
+    const inAt = (s, f) => {
+      if (s === mine) { for (let x = f; x >= 0 && x > f - 400; x--) if (localIn.has(x)) return localIn.get(x); return 0; }
+      const r = R[s]; if (f >= r.quit) return -1;
+      let v = 0; for (let j = r.ch.length - 1; j >= 0; j--) if (r.ch[j][0] <= f) { v = r.ch[j][1]; break; }
+      return v;
+    };
+    const humans = roster.map((r, i) => !r.bot && i !== mine ? i : -1).filter(i => i >= 0);
+    if (net) {
+      o.net.onMsg = (s, m) => {
+        const r = R[s]; if (!r || s === mine) return;
+        r.heard = performance.now(); if (!m.q && m.f > DELAY + 2) peerStarted = true;
+        if (m.q) { if (r.quit === Infinity) { r.quit = Math.max(m.f, r.conf + 1); if (r.quit < cur) rbFrom = Math.min(rbFrom, r.quit); } return; }
+        // 照 frame 順序插入（網路偶爾會讓訊息晚到、順序顛倒，不能直接丟掉）
+        if (r.ch.some(c => c[0] === m.f)) return;
+        if (m.f < r.conf) NETSTAT.late++;
+        const prev = inAt(s, m.f);
+        let k = r.ch.length; while (k > 0 && r.ch[k - 1][0] > m.f) k--;
+        r.ch.splice(k, 0, [m.f, m.i]); if (m.f > r.conf) r.conf = m.f;
+        if (m.i !== prev && m.f < cur) rbFrom = Math.min(rbFrom, m.f);
+      };
+      if (o.net.flush) o.net.flush();
+      o.net.onBye = s => { if (ended || R[s].quit !== Infinity) return; const alive = humans.filter(h => !o.net.gone(h)).concat(mine).sort((a, b) => a - b); if (alive[0] === mine) o.net.quitFor(s, Math.max(cur, R[s].conf + 1) + DELAY); };
+    }
+    const evq = [];
+    const simOne = (record) => {
+      hist.set(cur, mzClone(st));
+      const ins = roster.map((r, s) => r.bot ? 0 : inAt(s, cur));
+      used.set(cur, ins);
+      mzStep(st, ins, record ? evq : null);
+      cur++;
+    };
+    // 勝負確定：每位真人玩家，要嘛輸入已經確認到結束那一步，要嘛在已確認的範圍內就出局了（之後的輸入不影響結果）
+    const overSettled = () => humans.every(s => R[s].quit !== Infinity || R[s].conf >= MZ.TIME);
+    const minConf = () => humans.reduce((m, s) => Math.min(m, R[s].quit !== Infinity ? Infinity : R[s].conf), Infinity);
+    let stallT = 0, overSeen = -1, lastSide = '', traceF = -1;
+    // 迴圈
+    const t0 = performance.now(), startAt = o.startAt || Date.now() + 3000;
+    let lastT = performance.now();
+    // ---- 連線保險 ----
+    let peerStarted = false, lastFrameAt = performance.now();
+    R.forEach(r => { r.heard = performance.now() + Math.max(0, startAt - Date.now()); });
+    const maxConf = () => humans.reduce((m, s) => Math.max(m, R[s].quit !== Infinity ? -1 : R[s].conf), -1);
+    const KICK_MS = NET_GRACE * 1000;   // 斷線的人等他 15 秒
+    const silentFor = s => performance.now() - R[s].heard;
+    // 卡住在等誰
+    const blocking = () => { const mc = minConf(); return humans.filter(s => R[s].quit === Infinity && R[s].conf === mc && cur - mc > MAXRB); };
+    const waitText = () => {
+      const b = blocking(); if (!b.length) return '等待其他玩家的連線……';
+      const sec = Math.ceil((KICK_MS - Math.max(...b.map(silentFor))) / 1000);
+      return `等待 ${b.map(s => names[s]).join('、')} 的連線……` + (sec <= 7 ? `（${Math.max(0, sec)} 秒後沒回應就讓他先離開）` : '');
+    };
+    // 一直沒回應的人：由還連得上的人裡面座位最前面的那一位，替他送出「離開」，大家在同一步把他移出比賽
+    const kickCheck = () => {
+      if (ended || typeof tbNet === 'undefined' || tbNet.conn === false) return;
+      blocking().forEach(s => {
+        if (R[s].kick || silentFor(s) < KICK_MS) return;
+        const ok = humans.filter(h => h !== s && R[h].quit === Infinity && silentFor(h) < KICK_MS).concat(mine).sort((x, y) => x - y);
+        if (ok[0] !== mine) return;
+        R[s].kick = 1; o.net.quitFor(s, Math.max(cur, R[s].conf + 1) + DELAY);
+        toast(`${names[s]} 連線中斷，先讓他離開，比賽繼續`, 3000);
+      });
+    };
+    // 模擬一步一步往前（含送出自己的輸入）；畫面在前景時每格呼叫，分頁在背景時由背景計時器呼叫
+    const tick = (now, target, dt, cap, live) => {
+      let evs = null;
+      if (!started && !ended && peerStarted) started = true;   // 自己的時鐘比較慢：別人已經開始了，就跟上
+      if (started && !ended) {
+        // 回溯：有人的輸入跟猜的不一樣，從那一步重算
+        if (rbFrom < cur) {
+          const f = Math.max(rbFrom, cur - MAXRB - 8);
+          if (hist.has(f)) { const end = cur; st = mzClone(hist.get(f)); cur = f; while (cur < end) simOne(false); }
+          rbFrom = Infinity;
+        }
+        let n = 0;
+        if (net) kickCheck();
+        // 自己落後別人（時鐘比較慢、分頁剛回到前景）：追上去，不要讓大家等
+        let tgt = target;
+        if (net) { const mx = maxConf(); if (mx - DELAY - 2 > tgt) tgt = Math.min(mx - DELAY - 2, cur + 60); }
+        while (cur < tgt && n < cap) {
+          if (net && cur - minConf() > MAXRB) { stallT += dt; NETSTAT.stall = (NETSTAT.stall || 0) + dt; break; }
+          stallT = 0;
+          const f = cur + DELAY;
+          if (!localIn.has(f)) {
+            const v = window.__mzBotPlay ? (() => { const s2 = mzClone(st); s2.p[mine].bot = 1; s2.p[mine].lv = 2; const r = mzBot(s2, mine); la = (((r >> 8) & 511) - 1 + 256) % 256; return r; })() : sample(f);
+            localIn.set(f, v);
+            if (net && (v !== lastSentV || f - lastSent >= (window.__HB || HB))) { o.net.send(f, v); lastSent = f; lastSentV = v; }
+          }
+          simOne(true); n++;
+        }
+        for (const f of hist.keys()) if (f < cur - MAXRB - 12) { hist.delete(f); used.delete(f); }
+        for (const f of localIn.keys()) if (f < cur - 400) localIn.delete(f);
+        { const ev2 = evq.splice(0); if (live) sfx(ev2); }
+        $('mzNote').textContent = stallT > 1 ? waitText() : '';
+        // 結束：要等那一步的輸入都確認了
+        if (st.over !== -1 && (!net || overSettled())) { if (overSeen < 0) overSeen = now; if (now - overSeen > 900) finish(); }
+        else overSeen = -1;
+      }
+      return evs;
+    };
+    const frame = ts => {
+      if (!$('mzwrap')) { cleanup(); return; }   // 畫面被關掉了：停止迴圈
+      const dt = Math.min(.1, (ts - lastT) / 1000); lastT = ts;
+      const now = Date.now(), target = Math.floor((now - startAt) / (1000 / MZ.TPS));
+      aimNow();
+      let evs = tick(now, target, dt, 6, true); lastFrameAt = performance.now();
+      const tf = (now - startAt) / (1000 / MZ.TPS), lerp = Math.max(0, Math.min(1, tf - cur));
+      const me2 = st.p[mine];
+      if (me2.trap) la = me2.a / MZ.NA * 256;
+      const vw = draw(st, { me: mine, aim: me2.trap ? null : la / 256 * Math.PI * 2, prev: hist.get(cur - 1), lerp: started ? lerp : 1, names });
+      { const pv = hist.get(cur - 1), q = me2, qp = pv && pv.p[mine], L2 = (a, b) => a + (b - a) * (started ? lerp : 1), ok = qp && Math.abs(qp.x - q.x) < 600 && Math.abs(qp.y - q.y) < 600;
+        cam = { px: (ok ? L2(qp.x, q.x) : q.x) / MZ.U * vw.T - vw.ox, py: (ok ? L2(qp.y, q.y) : q.y) / MZ.U * vw.T - vw.oy - 10 }; }
+      mzMini($('mzMini'), st, mine, la / 256 * Math.PI * 2);
+      if (flash) { flash = 0; }
+      if (noteT && performance.now() - noteT > 1800) { noteT = 0; $('mzMsg').className = 'mzmsg'; }
+      // 側欄
+      const left = Math.max(0, Math.ceil((MZ.TIME - st.t) / MZ.TPS));
+      setHTML('mzClock', `⏰ ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`);
+      setHTML('mzX2', st.t > MZ.TIME - MZ.LAST && st.over === -1 ? '最後 30 秒：分數 ×2！' : '');
+      const card = i => { const p = st.p[i]; return `<div class="bmpl mzpl ${i === mine ? 'me' : ''}" style="border-color:${mzCol(st, i)}"><b style="color:${mzCol(st, i)}">${esc(names[i])}${i === mine ? '（你）' : ''}</b>
+        <div class="sks">⭐ ${p.sc} 分　被包住 ${p.hit} 次</div><div class="mzst">${p.out ? '<b class="bmout">離開了</b>' : p.trap ? '<b class="bmout">在泡泡裡</b>' : p.inv ? '保護中' : ''}</div></div>`; };
+      const sideH = tm ? [0, 1].map(t => { const ids = st.p.map((p, i) => i).filter(i => mzTeam(st, i) === t); return `<div class="mzteam" style="color:${MZ.TCOL[t]}">${MZ.TNAME[t]}　${ids.reduce((s, i) => s + st.p[i].sc, 0)} 分${mzTeam(st, mine) === t ? '（你的隊）' : ''}</div>` + ids.map(card).join(''); }).join('')
+        : st.p.map((p, i) => card(i)).join('');
+      if (sideH !== lastSide) { lastSide = sideH; $('mzSide').innerHTML = sideH; }
+      raf = requestAnimationFrame(frameSafe);
+    };
+    // 就算某一格出錯，也不讓整個遊戲停住（不用重新整理）
+    const frameSafe = ts => { try { frame(ts); } catch (e) { console.warn('遊戲畫面出錯', e); window.__frameErr = (window.__frameErr || 0) + 1; if (!ended) raf = requestAnimationFrame(frameSafe); } };
+    raf = requestAnimationFrame(frameSafe);
+    // 分頁在背景（縮小、切到別的分頁）時畫面不會更新，但模擬和送輸入要繼續，不然其他人會一直等
+    const stopBg = net ? bmBgTicker(() => { if (ended || !$('mzwrap') || performance.now() - lastFrameAt < 200) return; try { const now = Date.now(); tick(now, Math.floor((now - startAt) / (1000 / MZ.TPS)), .05, 60, false); } catch (e) { console.warn(e); } }) : () => {};
+    if (net) o.net.onKicked = () => { if (ended) return; toast('你的連線太久沒有回應，這一場先離開了', 4000); finish(true); };
+    const cd = setInterval(() => {
+      if (!$('mzwrap')) { clearInterval(cd); return; }
+      const s = Math.ceil((startAt - Date.now()) / 1000);
+      if (s > 0 && !peerStarted) { $('mzCount').textContent = s; $('mzCount').className = 'tbcount on'; beep(440, .08, 'square', .04); }
+      else { clearInterval(cd); $('mzCount').textContent = '開始！'; beep(880, .2, 'square', .05); setTimeout(() => { if ($('mzCount')) $('mzCount').className = 'tbcount'; }, 600); started = true; }
+    }, 200);
+    const cleanup = () => { stopBg(); clearInterval(cd); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); removeEventListener('blur', blur); removeEventListener('mouseup', mu); removeEventListener('mousemove', mm); };
+    function finish(quit) {
+      if (ended) return; ended = true; cleanup();
+      if (net) o.net.finish(quit, cur + DELAY);
+      const myT = 10 + mzTeam(st, mine);
+      const win = quit ? false : (tm ? st.over === myT : st.over === mine) ? true : st.over === -2 ? null : false;
+      const rank = mzRank(st);
+      let title = quit ? '已離開' : win ? (tm ? '你們這隊贏了！' : '你贏了！') : win === null ? '平手！' : tm ? `${MZ.TNAME[st.over - 10]}獲勝！` : `${esc(names[st.over])} 獲勝！`;
+      if (!quit) {
+        if (tm) title += `<small>${[0, 1].map(t => `<span style="color:${MZ.TCOL[t]}">${MZ.TNAME[t]}</span> ${st.p.reduce((s, p, i) => s + (mzTeam(st, i) === t ? p.sc : 0), 0)} 分`).join('　')}</small>`;
+        title += `<small>${rank.map((i, j) => `${tm ? '' : j + 1 + '. '}<span style="color:${mzCol(st, i)}">${esc(names[i])}</span> ${st.p[i].sc} 分`).join('　')}</small><small>你得到 ${st.p[mine].sc} 分、吹了 ${st.p[mine].shots} 個泡泡、被包住 ${st.p[mine].hit} 次</small>`;
+      }
+      if (win) SFX.win(); else if (win === false && !quit) SFX.wrong();
+      const gold = win ? (net ? 20 : 10 + o.level * 10 + (o.bots - 1) * 5) : 0;
+      if (gold) { me.gold += gold; saveMe(); updateHUD(); title += `<small>🪙 獲得 ${gold} 金幣</small>`; }
+      const box = document.createElement('div'); box.className = 'tbend';
+      box.innerHTML = `<div class="px"><h2>${title}</h2>${net ? '<button class="pbtn green big" id="mzAgain">再來一局</button> <button class="pbtn gray big" id="mzLeave">離開房間</button>' : '<button class="pbtn green big" id="mzAgainC">再玩一次</button> <button class="pbtn gray big" id="mzOk">好</button>'}</div>`;
+      $('mzwrap').appendChild(box);
+      const stop = v => { cancelAnimationFrame(raf); res(v); };
+      if (net) { $('mzAgain').onclick = () => stop({ win, again: true }); $('mzLeave').onclick = () => stop({ win, again: false }); }
+      else { $('mzOk').onclick = () => stop(win); $('mzAgainC').onclick = () => { cancelAnimationFrame(raf); mzPlay(o).then(res); }; }
+    }
+    $('mzQuit').onclick = async () => { if (ended) return; if (started && !(await askBox({ title: '離開對戰', text: '確定要離開嗎？這一場會算輸。', ok: '離開' }))) return; finish(true); };
+    window.__mz = { get la() { return la; }, set la(v) { la = v; }, get st() { return st; }, get cur() { return cur; }, finish, mine, R, hist, used, localIn };
+  });
+}
+
+// =====================================================================
+//  泡泡迷宮戰的連線：跟寶石炸彈陣一樣，每個人只送「按鍵有變的時候」＋心跳
+
+const mzRoom = {
+  async create() {
+    if (!(await tbNet.init())) return;
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid();
+    let code = null;
+    for (let i = 0; i < 8 && !code; i++) {
+      const c = String(1000 + Math.floor(Math.random() * 9000));
+      let r;
+      try { r = await D.runTransaction(D.ref(db, `mz/rooms/${c}`), cur => (cur && cur.host) ? undefined : { host: uid, hn: me.name, st: 'lobby', round: 0, cpu: true, lv: 1, tm: 0, pl: { [uid]: { n: me.name, s: 0, lk: me.look | 0 } }, ts: Date.now() }); }
+      catch (e) { console.warn(e); return toast(`開房失敗（${e.code || e.message}），請老師確認已經部署`, 4000); }
+      if (r.committed) code = c;
+    }
+    if (!code) return toast('現在房間太多了，等一下再試');
+    D.onDisconnect(D.ref(db, `mz/rooms/${code}`)).remove();
+    return this.loop(code, true, 0);
+  },
+  async join() {
+    if (!(await tbNet.init())) return;
+    const code = await askBox({ title: '🔑 加入房間', text: '輸入朋友給你的 4 位數房號', input: true, ok: '加入' });
+    if (!code) return;
+    if (!/^\d{4}$/.test(code.trim())) return toast('房號是 4 個數字喔');
+    const c = code.trim(), D = tbNet.D, db = tbNet.db;
+    let snap;
+    try { snap = await D.get(D.ref(db, `mz/rooms/${c}`)); }
+    catch (e) { console.warn(e); return toast(`對戰伺服器連不上（${e.code || e.message}），請老師確認已經部署`, 4000); }
+    if (!snap.exists()) {
+      for (const g2 of ['tb', 'pv', 'sg', 'bb', 'bm', 'sk', 'sm', 'xq']) {
+        let ok = false; try { ok = (await D.get(D.ref(db, `${g2}/rooms/${c}`))).exists(); } catch (e) {}
+        if (ok) {
+          toast(`這是「${netRoom.NAME[g2]}」的房間，請到那個遊戲輸入房號`, 3500);
+          return;
+        }
+      }
+      return toast('找不到這個房間，確認房號再試一次');
+    }
+    return this.joinCode(c);
+  },
+  async joinCode(c) {
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid(), base = `mz/rooms/${c}`;
+    let why = '加入失敗，再試一次', r;
+    try {
+      r = await D.runTransaction(D.ref(db, base), cur => {
+        if (!cur) return cur;
+        if (!cur.host || cur.closed) { why = '找不到這個房間，確認房號再試一次'; return undefined; }
+        cur.pl = cur.pl || {};
+        if (cur.host === uid) { why = '不能加入自己開的房間（要用不同帳號）'; return undefined; }
+        if (cur.pl[uid]) return cur;
+        const taken = Object.values(cur.pl).map(p => p.s);
+        const s = [0, 1, 2, 3].find(k => !taken.includes(k));
+        if (s === undefined) { why = '這個房間已經滿了（最多 4 人）'; return undefined; }
+        cur.pl[uid] = { n: me.name, s, lk: me.look | 0 }; return cur;
+      });
+    } catch (e) { console.warn(e); return toast(`加入失敗（${e.code || e.message}）`, 4000); }
+    const v = r.snapshot.val();
+    if (!r.committed || !v || !v.pl || !v.pl[uid]) return toast(why);
+    D.onDisconnect(D.ref(db, `${base}/pl/${uid}`)).remove();
+    D.push(D.ref(db, `${base}/chat`), { sys: 1, t: `${me.name} 進入房間`, ts: Date.now() });
+    return this.loop(c, false, v.round || 0);
+  },
+  async loop(code, host, round) {
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid(), base = `mz/rooms/${code}`;
+    // 斷線 15 秒內回來，房間還在（見 roomKeep）
+    const K = roomKeep(base, host, { has: v => !!(v.pl && v.pl[uid]), join: cur => { cur.pl = cur.pl || {}; if (cur.pl[uid]) return false; const taken = Object.values(cur.pl).map(p => p.s), s = [0, 1, 2, 3].find(k => !taken.includes(k)); if (s === undefined) return false; cur.pl[uid] = { n: me.name, s, lk: me.look | 0 }; return true; },
+      arm: () => D.onDisconnect(D.ref(db, `${base}/pl/${uid}`)).remove() });
+    let last = round;
+    for (;;) {
+      const go = await this.lobby(code, host, last);
+      if (!go) break;
+      last = go.round;
+      const mySlot = go.roster.findIndex(r => r.u === uid);
+      if (typeof gameChat !== 'undefined') gameChat.open(base);   // 遊戲中也能聊天
+      const r = await mzPlay({ mode: 'net', tm: go.tm, roster: go.roster, mySlot, seed: go.seed, startAt: go.startAt, net: bmNet(tbNet.play('mz', code, go.round), uid, go.roster, mySlot, host) });
+      if (typeof gameChat !== 'undefined') gameChat.close();
+      if (!r || !r.again) break;
+      if (host) D.update(D.ref(db, base), { st: 'lobby' });
+    }
+    const alive = K.alive;
+    if (host) K.close();
+    else { K.stop(); if (alive) { D.push(D.ref(db, `${base}/chat`), { sys: 1, t: `${me.name} 離開房間`, ts: Date.now() }); D.remove(D.ref(db, `${base}/pl/${uid}`)); } }
+    tbNet.idle();
+  },
+  lobby(code, host, lastRound) {
+    const D = tbNet.D, db = tbNet.db, uid = tbNet.uid(), base = `mz/rooms/${code}`, roomRef = D.ref(db, base);
+    return new Promise(res => {
+      UI.busy = true; world.active = false;
+      $('ov').innerHTML = `<div class="lobby px" id="lobby">
+        <h2>${netRoom.NAME.mz}　<span class="lbcode">房號 <b>${code}</b></span></h2>
+        <div class="lbplayers bm4" id="lbPs"></div>
+        <div class="bmopt" id="lbOpt"></div>
+        <div class="lbchat"><div class="lblog" id="lbLog"></div>
+          <div class="lbin"><input id="lbMsg" maxlength="40" placeholder="輸入訊息，按 Enter 送出" autocomplete="off"><button class="pbtn small" id="lbSend">送出</button></div></div>
+        <div class="lbbtns">${host ? '<button class="pbtn green big" id="lbStart" disabled>開始</button>' : '<button class="pbtn blue big" id="lbReady">準備</button>'}<button class="pbtn gray" id="lbLeave">離開房間</button></div>
+        <p class="tbsub" id="lbTip"></p></div>`;
+      let done = false, room = null, busy = false;
+      const subs = [];
+      const end = val => { if (done) return; done = true; subs.forEach(f => f()); res(val); };
+      const log = $('lbLog');
+      subs.push(D.onChildAdded(D.ref(db, `${base}/chat`), s => {
+        const m = s.val(); if (!m) return;
+        const d = document.createElement('div'); d.className = m.sys ? 'lbsys' : 'lbline';
+        d.innerHTML = m.sys ? esc(m.t) : `<b>${esc(m.n || '')}</b>：${esc(m.t || '')}`;
+        log.appendChild(d); while (log.children.length > 60) log.firstChild.remove(); log.scrollTop = log.scrollHeight;
+      }));
+      const send = () => { const t = $('lbMsg').value.trim().slice(0, 40); if (!t || chatMuted()) return; $('lbMsg').value = ''; D.push(D.ref(db, `${base}/chat`), { n: me.name, t, ts: Date.now() }); };
+      $('lbSend').onclick = send; subs.push(chatGuard($('lbMsg'), $('lbSend'), log));
+      $('lbMsg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); send(); } });
+      $('lbLeave').onclick = () => end(null);
+      const people = v => Object.entries(v.pl || {}).map(([u, p]) => ({ u, n: p.n, s: p.s, r: !!p.r, lk: p.lk == null ? null : p.lk | 0 })).sort((a, b) => a.s - b.s);
+      const canStart = v => { const ps = people(v), others = ps.filter(p => p.u !== v.host); return others.every(p => p.r) && (ps.length >= 2 || v.cpu) && (!v.tm || v.cpu || ps.length === 4); };
+      if (host) {
+        $('lbOpt').innerHTML = `<label><input type="checkbox" id="lbCpu"> 🤖 電腦補位（空位由電腦加入）</label>
+          <select id="lbLv"><option value="0">新手電腦</option><option value="1">普通電腦</option><option value="2">高手電腦</option></select>
+          <label>玩法 <select id="lbTm"><option value="0">各自為戰</option><option value="1">2 對 2</option></select></label>`;
+        $('lbTm').onchange = () => D.update(roomRef, { tm: +$('lbTm').value });
+        $('lbCpu').onchange = () => D.update(roomRef, { cpu: $('lbCpu').checked });
+        $('lbLv').onchange = () => D.update(roomRef, { lv: +$('lbLv').value });
+      }
+      if (!host) $('lbReady').onclick = () => { const r = !(room && room.pl && room.pl[uid] && room.pl[uid].r); D.update(roomRef, { [`pl/${uid}/r`]: r || null }); };
+      else $('lbStart').onclick = async () => {
+        if (!room || !canStart(room) || busy) return;
+        busy = true; $('lbStart').disabled = true; $('lbTip').textContent = '準備開始……';
+        const ps = people(room), roster = ps.map(p => p.lk == null ? { u: p.u, n: p.n } : { u: p.u, n: p.n, lk: p.lk });
+        if (room.cpu) while (roster.length < 4) roster.push({ bot: 1, lv: room.lv || 0 });
+        const round = (room.round || 0) + 1, start = tbNet.now() + 3500, seed = (Math.random() * 1e9) | 0;
+        const tm = room.tm ? 1 : 0;
+        const up = { st: 'go', round, start, seed, ro: roster, tm };
+        ps.forEach(p => { up[`pl/${p.u}/r`] = null; });
+        await D.update(roomRef, up);
+        end({ round, roster, startAt: start - tbNet.off, seed, tm });
+      };
+      const RG = roomWait(() => { toast('房主離開了，房間關閉'); end(null); });
+      subs.push(() => RG.stop());
+      subs.push(D.onValue(roomRef, s => {
+        const v = s.val(); if (done) return;
+        if (v && v.closed) { toast('房主離開了，房間關閉'); end(null); return; }
+        if (!v || !v.host) { if (!host) RG.lost(); return; }   // 房主斷線：等他 15 秒
+        RG.back();
+        if (!host && !(v.pl && v.pl[uid])) return;   // 自己斷線被拿掉：會自動補回去
+        room = v;
+        const ps = people(v), bots = v.cpu ? 4 - ps.length : 0, CC = v.tm ? MZ.TCOL : MZ.COL;
+        const tag = i => v.tm ? `<div class="lbs" style="color:${MZ.TCOL[i === 0 || i === 3 ? 0 : 1]}">${MZ.TNAME[i === 0 || i === 3 ? 0 : 1]}</div>` : '';
+        let html = ps.map((p, i) => `<div class="lbp" style="border-color:${CC[i]}"><div class="lbn" style="color:${CC[i]}">${p.u === v.host ? '👑 ' : ''}${esc(p.n)}</div>${tag(i)}<div class="lbs ${p.u === v.host || p.r ? 'on' : ''}">${p.u === v.host ? '房主' : p.r ? '✅ 準備好了' : '還沒準備'}</div></div>`).join('');
+        for (let i = ps.length; i < 4; i++) html += i < ps.length + bots ? `<div class="lbp" style="border-color:${CC[i]}"><div class="lbn" style="color:${CC[i]}">🤖 電腦${MZ.CNAME[i]}</div>${tag(i)}<div class="lbs on">${['新手', '普通', '高手'][v.lv || 0]}</div></div>` : `<div class="lbp"><div class="lbn wait">空位</div>${tag(i)}<div class="lbs">等朋友加入</div></div>`;
+        $('lbPs').innerHTML = html;
+        if (host) {
+          $('lbCpu').checked = !!v.cpu; $('lbLv').value = String(v.lv || 0); $('lbLv').disabled = !v.cpu; $('lbTm').value = String(v.tm || 0);
+          $('lbStart').disabled = !canStart(v) || busy;
+          if (!busy) $('lbTip').textContent = ps.length < 2 && !v.cpu ? '等朋友輸入房號加入，或打開「電腦補位」' : v.tm && !v.cpu && ps.length < 4 ? '2 對 2 要 4 個人，或打開「電腦補位」' : canStart(v) ? '大家都準備好了，按「開始」！' : '等大家按「準備」';
+        } else {
+          $('lbOpt').innerHTML = `<span class="tbsub">電腦補位：${v.cpu ? '開（' + ['新手', '普通', '高手'][v.lv || 0] + '）' : '關'}　玩法：${v.tm ? '2 對 2' : '各自為戰'}</span>`;
+          const r = !!(v.pl[uid] && v.pl[uid].r);
+          $('lbReady').textContent = r ? '取消準備' : '準備'; $('lbReady').className = 'pbtn big ' + (r ? 'gray' : 'blue');
+          $('lbTip').textContent = r ? '等房主按「開始」' : '準備好就按「準備」';
+          if ((v.round || 0) > lastRound && v.st === 'go' && v.start && v.seed != null && v.ro) end({ round: v.round, roster: v.ro, startAt: v.start - tbNet.off, seed: v.seed, tm: v.tm || 0 });
+        }
+      }));
+    });
+  }
+};
+['create', 'join', 'joinCode'].forEach(k => { const f = mzRoom[k]; mzRoom[k] = async function (...a) { try { return await f.apply(this, a); } finally { tbNet.idle(); } }; });
+
+
+// ---------- 主選單 ----------
+function mzOpen() {
+  if (!me || B.st || UI.busy) return;
+  if (typeof tbAllowed === 'function' && !tbAllowed()) return toast('老師目前沒有開放對戰遊戲喔！');
+  world.active = false; UI.busy = true;
+  const online = typeof netRoom !== 'undefined' && typeof tbNet !== 'undefined' && tbNet.ready();
+  $('ov').innerHTML = `<div class="tbmenu px"><h2> 泡泡迷宮戰</h2>
+    <p class="tbsub">帶著自己的勇者在迷宮裡找到對手，吹泡泡把他包起來！<br><b>W A S D</b>（或方向鍵）走路、<b>滑鼠</b>瞄準、<b>空白鍵</b>或滑鼠左鍵吹泡泡。<br>包住別人 ＋1 分（最後 30 秒 ＋2 分）；被包住 3 秒後回到出發點。2 分鐘後分數最高的贏！</p>
+    <div class="tbbtns" id="mzBtns">
+      ${online ? `<button class="pbtn green big" id="mzCreate">🏠 開房間（2～4 人）</button><button class="pbtn blue big" id="mzJoin">🔑 輸入房號加入</button>` : ''}
+      <button class="pbtn big" id="mzCpu">🤖 跟電腦對戰</button>
+      <button class="pbtn gray" id="mzBack">↩ 回到冒險</button></div>
+    ${online ? '' : '<p class="tbsub">多人開房要在連線版才能玩。</p>'}</div>`;
+  $('mzBack').onclick = () => { $('ov').innerHTML = ''; UI.busy = false; world.active = true; updateHUD(); };
+  $('mzCpu').onclick = () => {
+    let n = 3, tm = 0;
+    const draw = () => {
+      if (tm) n = 3;
+      $('mzBtns').innerHTML = `<p class="tbsub" style="margin:0">玩法：<button class="pbtn small ${!tm ? 'green' : 'gray'}" style="width:110px" data-tm="0">各自為戰</button> <button class="pbtn small ${tm ? 'green' : 'gray'}" style="width:110px" data-tm="1">2 對 2</button></p>
+        <p class="tbsub" style="margin:0">電腦人數：
+        ${[1, 2, 3].map(k => `<button class="pbtn small ${k === n ? 'green' : 'gray'}" style="width:76px" data-n="${k}" ${tm && k !== 3 ? 'disabled' : ''}>${k} 個</button>`).join(' ')}</p>
+        <p class="tbsub" style="margin:0;min-height:1.4em">${tm ? '你和一個電腦隊友，對上兩個電腦' : '每個人都是對手'}</p>
+        <button class="pbtn green big" data-lv="0">🐢 新手電腦</button><button class="pbtn blue big" data-lv="1">🐇 普通電腦</button><button class="pbtn big" data-lv="2">🐉 高手電腦</button>
+        <button class="pbtn gray" id="mzLvBack">返回</button>`;
+      $('mzBtns').querySelectorAll('[data-n]').forEach(b => b.onclick = () => { n = +b.dataset.n; draw(); });
+      $('mzBtns').querySelectorAll('[data-tm]').forEach(b => b.onclick = () => { tm = +b.dataset.tm; draw(); });
+      $('mzBtns').querySelectorAll('[data-lv]').forEach(b => b.onclick = () => mzPlay({ mode: 'cpu', level: +b.dataset.lv, bots: n, tm }).then(mzOpenAgain));
+      $('mzLvBack').onclick = mzOpenAgain;
+    };
+    draw();
+  };
+  const hide = () => { const m = document.querySelector('.tbmenu'); if (m) m.style.display = 'none'; };
+  if (online) {
+    $('mzCreate').onclick = () => (hide(), mzRoom.create()).then(mzOpenAgain);
+    $('mzJoin').onclick = () => (hide(), mzRoom.join()).then(mzOpenAgain);
+  }
+}
+function mzOpenAgain() { UI.busy = false; world.active = false; $('ov').innerHTML = ''; mzOpen(); }
+(() => {
+  const st = document.createElement('style');
+  st.textContent = `
+.mzwrap{background:#1a2030}.mzside{width:190px}.mzmini{width:136px;height:136px;image-rendering:pixelated;display:block;margin:0 auto 6px;border:3px solid #3a2a1a}
+.mzpl{min-height:78px}.mzst{height:20px;font-size:14px;font-weight:800;color:#a8801a}.mzteam{font-weight:900;font-size:16px;margin:6px 0 2px;background:#fff8e8;padding:2px 6px;border:2px solid #3a2a1a}
+.mzview{position:relative;line-height:0}.mzview canvas{image-rendering:pixelated;border:4px solid #3a2a1a;cursor:crosshair;user-select:none}
+.mzmsg{position:absolute;left:0;right:0;top:14px;text-align:center;line-height:1.4;opacity:0;transition:opacity .2s;pointer-events:none}.mzmsg.on{opacity:1}
+.mzmsg b{display:inline-block;color:#fff;padding:4px 14px;border:3px solid #2b1d14;font-size:18px}
+.mzhelp{line-height:1.4;font-size:13px;color:#e8dcc0;text-align:center;margin-top:4px}
+.mzx2{display:inline-block;min-width:170px;color:#ffd23f;font-weight:900}`;
+  document.head.appendChild(st);
+})();
+
 // =====================================================================
 //  勇者擂台：2～4 人在學校場景對戰（鍵盤勇者原創角色：選武器決定打法）
 //  ‧每人 100 體力，被打會扣；體力越低越容易被打飛，扣到 0 會頭暈
