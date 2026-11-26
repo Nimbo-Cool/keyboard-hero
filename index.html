@@ -4754,7 +4754,7 @@ async function talkGeneric(id) {
     // 連線版由老師在後台逐一勾選，沒勾的就看不到（某位學生被禁玩是另一件事，點了才會說不行）
     const on = id2 => typeof gameOn !== 'function' || gameOn(id2);
     const prac = N.arena.list.filter(o => on(practiceCat(o.mini)));
-    const ARENA = typeof tbOpen === 'function' ? [['tb', '⌨️ 鍵帽拼拼樂'], ['pv', '🏐 像素排球'], ['sg', '\uE100 彈弓對決'], ['bb', '🫧 泡泡對戰'], ['bm', '💎 寶石炸彈陣'], ['sk', '\uE104 字母蛇'], ['mz', '\uE105 泡泡迷宮戰'], ['sm', '⚔️ 勇者擂台'], ['xq', '\uE101 魔棋爭先'], ['ac', '\uE102 迷霧魔棋'], ['jq', '\uE103 跳跳星城']].filter(([g]) => on(g)) : [];
+    const ARENA = typeof tbOpen === 'function' ? [['tb', '⌨️ 鍵帽拼拼樂'], ['pv', '🏐 像素排球'], ['sg', '\uE100 彈弓對決'], ['bb', '🫧 泡泡對戰'], ['bm', '💎 寶石炸彈陣'], ['sk', '\uE104 字母蛇'], ['mz', '\uE105 吹泡迷宮戰'], ['sm', '⚔️ 勇者擂台'], ['xq', '\uE101 魔棋爭先'], ['ac', '\uE102 迷霧魔棋'], ['jq', '\uE103 跳跳星城']].filter(([g]) => on(g)) : [];
     const rec = prac.map(o => { const D = MINIS[o.mini]; return D.practice ? `${D.title} ${me.best[D.practice] || 0}${D.unit}` : ''; }).filter(Boolean).join('、');
     const opts = prac.map(o => ({ t: o.t, v: o.mini })).concat(ARENA.map(([g, t]) => ({ t, v: '__' + g })), BOARD_OPT());
     if (!opts.length) return dialog([[id, '競技場今天休息中，老師還沒有開放這裡的遊戲喔！先去冒險吧～']]);
@@ -15070,9 +15070,9 @@ const SK = {
 const SKI = { U: 1, D: 2, L: 4, R: 8 };
 // 題庫：英文（3／4／5 個字母，附中文意思）、注音（不含聲調）
 SK.Q = [
-  { name: '英文 3 個字母', tip: '三年級：cat、dog、sun……', en: 1, L: 'cat貓 dog狗 pig豬 sun太陽 cup杯子 hat帽子 bag書包 box盒子 bus公車 egg蛋 pen原子筆 red紅色 bed床 fox狐狸 map地圖 ant螞蟻 bee蜜蜂 cow母牛 car汽車 toy玩具' },
-  { name: '英文 4 個字母', tip: '四年級：book、fish、cake……', en: 1, L: 'book書 fish魚 cake蛋糕 milk牛奶 frog青蛙 star星星 desk書桌 rain雨 ball球 bird鳥 lion獅子 duck鴨子 tree樹 hand手 moon月亮 kite風箏 rice米飯 blue藍色 home家 ship船' },
-  { name: '英文 5 個字母', tip: '五、六年級：apple、tiger……', en: 1, L: 'apple蘋果 tiger老虎 water水 music音樂 happy快樂 chair椅子 mouse老鼠 horse馬 bread麵包 juice果汁 house房子 green綠色 smile微笑 clock時鐘 zebra斑馬 pizza披薩 panda貓熊 grape葡萄 beach海灘 lemon檸檬' },
+  { name: '3 字母', tip: '三年級：cat、dog、sun……', en: 1, L: 'cat貓 dog狗 pig豬 sun太陽 cup杯子 hat帽子 bag書包 box盒子 bus公車 egg蛋 pen原子筆 red紅色 bed床 fox狐狸 map地圖 ant螞蟻 bee蜜蜂 cow母牛 car汽車 toy玩具' },
+  { name: '4 字母', tip: '四年級：book、fish、cake……', en: 1, L: 'book書 fish魚 cake蛋糕 milk牛奶 frog青蛙 star星星 desk書桌 rain雨 ball球 bird鳥 lion獅子 duck鴨子 tree樹 hand手 moon月亮 kite風箏 rice米飯 blue藍色 home家 ship船' },
+  { name: '5 字母', tip: '五、六年級：apple、tiger……', en: 1, L: 'apple蘋果 tiger老虎 water水 music音樂 happy快樂 chair椅子 mouse老鼠 horse馬 bread麵包 juice果汁 house房子 green綠色 smile微笑 clock時鐘 zebra斑馬 pizza披薩 panda貓熊 grape葡萄 beach海灘 lemon檸檬' },
   { name: '注音', tip: '照順序吃注音符號，拼出字的讀音（不含聲調）', en: 0, L: '貓ㄇㄠ 狗ㄍㄡ 牛ㄋㄧㄡ 書ㄕㄨ 花ㄏㄨㄚ 山ㄕㄢ 天ㄊㄧㄢ 火ㄏㄨㄛ 水ㄕㄨㄟ 車ㄔㄜ 鳥ㄋㄧㄠ 馬ㄇㄚ 羊ㄧㄤ 米ㄇㄧ 刀ㄉㄠ 筆ㄅㄧ 門ㄇㄣ 家ㄐㄧㄚ 球ㄑㄧㄡ 糖ㄊㄤ 熊ㄒㄩㄥ 星ㄒㄧㄥ 雲ㄩㄣ 蛇ㄕㄜ 龍ㄌㄨㄥ 兔ㄊㄨ 船ㄔㄨㄢ 風ㄈㄥ 草ㄘㄠ 燈ㄉㄥ' }
 ];
 SK.Q.forEach(q => {
@@ -15663,7 +15663,7 @@ function skOpen() {
     const draw = () => {
       $('skBtns').innerHTML = `<p class="tbsub" style="margin:0">電腦人數：
         ${[1, 2, 3].map(k => `<button class="pbtn small ${k === n ? 'green' : 'gray'}" style="width:76px" data-n="${k}">${k} 個</button>`).join(' ')}</p>
-        <p class="tbsub" style="margin:0">題目：${SK.Q.map((x, k) => `<button class="pbtn small ${k === q ? 'green' : 'gray'}" style="width:150px" data-q="${k}">${x.name}</button>`).join(' ')}</p>
+        <p class="tbsub" style="margin:0">題目：${SK.Q.map((x, k) => `<button class="pbtn small ${k === q ? 'green' : 'gray'}" style="width:96px" data-q="${k}">${x.name}</button>`).join(' ')}</p>
         <p class="tbsub" style="margin:0;min-height:1.4em">${SK.Q[q].tip}</p>
         <button class="pbtn green big" data-lv="0">🐢 新手電腦</button><button class="pbtn blue big" data-lv="1">🐇 普通電腦</button><button class="pbtn big" data-lv="2">🐉 高手電腦</button>
         <button class="pbtn gray" id="skLvBack">返回</button>`;
@@ -15692,7 +15692,7 @@ function skOpenAgain() { UI.busy = false; world.active = false; $('ov').innerHTM
 })();
 
 // =====================================================================
-//  泡泡迷宮戰：2～4 人在迷宮裡，斜上方俯視，用自己的像素造型互相吹泡泡
+//  吹泡迷宮戰：2～4 人在迷宮裡，斜上方俯視，用自己的像素造型互相吹泡泡
 //  ‧W A S D（或方向鍵）走路、滑鼠瞄準、空白鍵或滑鼠左鍵吹泡泡
 //  ‧被泡泡包住 3 秒，之後回到出發點，有 2 秒保護（保護中吹泡泡，保護就結束）
 //  ‧包住別人 +1 分，最後 30 秒 +2 分；2 分鐘後分數最高的贏，同分比誰被包住比較少
@@ -15705,8 +15705,15 @@ const MZ = {
   SPD: 120, BSPD: 300, BLIFE: 44, R: 250, HITR: 430, NA: 256,
   COL: ['#e04f3f', '#3a6fd8', '#6abe30', '#ffd23f'], TCOL: ['#e04f3f', '#3a6fd8', '#3ac6e0', '#ff8a3d'],
   CNAME: ['紅', '藍', '綠', '黃'], TNAME: ['紅隊', '藍隊'],
-  START: [[1, 1, 32], [15, 15, 160], [15, 1, 96], [1, 15, 224]]
+  // 地圖：大小、地板顏色、生成方式
+  MAPS: [
+    { n: '草原迷宮', N: 17, kind: 'maze', ext: 14, fl: ['#8cc86a', '#96d074', '#7ab85a'] },
+    { n: '大迷宮', N: 21, kind: 'maze', ext: 26, fl: ['#b8c0a0', '#c2caa8', '#a0a888'] },
+    { n: '石柱廣場', N: 19, kind: 'plaza', fl: ['#e0c890', '#e8d4a0', '#c8b078'] },
+    { n: '四房城堡', N: 19, kind: 'castle', fl: ['#b8926a', '#c29c72', '#a07a52'] }
+  ]
 };
+MZ.START = n => [[1, 1, 32], [n - 2, n - 2, 160], [n - 2, 1, 96], [1, n - 2, 224]];
 const MZI = { F: 1, B: 2, SL: 4, SR: 8, FIRE: 16, ABS: 32, U: 1, D: 2, L: 4, R: 8 };   // ABS：上下左右是畫面方向（玩家）；沒有 ABS：前後左右是面向的方向（電腦）
 MZ.COS = Array.from({ length: MZ.NA }, (_, a) => Math.round(Math.cos(a * Math.PI * 2 / MZ.NA) * 1024));
 MZ.SIN = Array.from({ length: MZ.NA }, (_, a) => Math.round(Math.sin(a * Math.PI * 2 / MZ.NA) * 1024));
@@ -15714,42 +15721,56 @@ const mzTeam = (st, i) => st.tm ? (i === 0 || i === 3 ? 0 : 1) : i;
 const mzCol = (st, i) => (st.tm ? MZ.TCOL : MZ.COL)[i];
 const mzRand = st => (st.r = (Math.imul(st.r, 1103515245) + 12345) & 0x7fffffff) / 0x80000000;
 const mzRi = (st, n) => Math.floor(mzRand(st) * n) % n;
-const mzWall = (st, cx, cy) => cx < 0 || cy < 0 || cx >= MZ.N || cy >= MZ.N || st.m[cy * MZ.N + cx] > 0;
-// 地圖：外圍是牆，裡面每隔一格一根柱子，再隨機把柱子往旁邊延長；上下左右對稱，四個角落一樣公平
+const mzWall = (st, cx, cy) => cx < 0 || cy < 0 || cx >= st.n || cy >= st.n || st.m[cy * st.n + cx] > 0;
+// 地圖：外圍是牆，裡面依種類放柱子／牆；全部上下左右對稱，四個角落一樣公平
+//  迷宮：每隔一格一根柱子，再隨機把柱子往旁邊延長
+//  廣場：空曠，隨機散落幾根柱子
+//  城堡：中間十字牆把場地分成四個房間，每面牆有門，房間裡有幾根柱子
 function mzMap(st) {
-  const N = MZ.N, m = new Array(N * N).fill(0), H = (N - 1) / 2;
+  const MP = MZ.MAPS[st.mp], N = MP.N, m = new Array(N * N).fill(0), H = (N - 1) / 2;
   const set = (x, y, v) => { [[x, y], [N - 1 - x, y], [x, N - 1 - y], [N - 1 - x, N - 1 - y]].forEach(([a, b]) => { m[b * N + a] = v; }); };
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (x === 0 || y === 0 || x === N - 1 || y === N - 1) m[y * N + x] = 1;
-  for (let y = 2; y <= H; y += 2) for (let x = 2; x <= H; x += 2) if (!(x === H && y === H)) set(x, y, 1);
   const open = () => {   // 所有空地都走得到
     const seen = new Uint8Array(N * N), q = [N + 1]; seen[N + 1] = 1; let n = 1;
     while (q.length) { const c = q.pop(); for (const d of [1, -1, N, -N]) { const k = c + d; if (!m[k] && !seen[k]) { seen[k] = 1; n++; q.push(k); } } }
     return n === m.filter(v => !v).length;
   };
-  for (let k = 0; k < 14; k++) {
-    const x = 2 + 2 * mzRi(st, H / 2), y = 2 + 2 * mzRi(st, H / 2), d = mzRi(st, 4);
-    const nx = x + [1, 0, -1, 0][d], ny = y + [0, 1, 0, -1][d];
-    if (nx < 1 || ny < 1 || nx > H || ny > H || (nx <= 2 && ny <= 2) || m[ny * N + nx]) continue;
-    if (nx === H || ny === H) continue;   // 中間的十字大路保持暢通
-    set(nx, ny, 1); if (!open()) set(nx, ny, 0);
+  const tryWall = (x, y) => { if (x < 1 || y < 1 || x > H || y > H || (x <= 2 && y <= 2) || m[y * N + x]) return; set(x, y, 1); if (!open()) set(x, y, 0); };
+  if (MP.kind === 'maze') {
+    for (let y = 2; y <= H; y += 2) for (let x = 2; x <= H; x += 2) if (!(x === H && y === H)) set(x, y, 1);
+    for (let k = 0; k < MP.ext; k++) {
+      const x = 2 + 2 * mzRi(st, Math.floor(H / 2)), y = 2 + 2 * mzRi(st, Math.floor(H / 2)), d = mzRi(st, 4);
+      const nx = x + [1, 0, -1, 0][d], ny = y + [0, 1, 0, -1][d];
+      if (nx === H || ny === H) continue;   // 中間的十字大路保持暢通
+      tryWall(nx, ny);
+    }
+  } else if (MP.kind === 'plaza') {
+    for (let k = 0; k < 7; k++) { const x = 2 + mzRi(st, H - 2), y = 2 + mzRi(st, H - 2); if (Math.abs(x - y) > 0 || x > 3) tryWall(x, y); }
+    tryWall(H, H); tryWall(H - 1, H); tryWall(H, H - 1);   // 中間一座小台
+  } else {
+    for (let k = 1; k <= H; k++) { set(k, H, 1); set(H, k, 1); }
+    const door = 2 + mzRi(st, H - 4); set(door, H, 0); set(H, door, 0);   // 每面牆一扇門（對稱後變兩扇）
+    for (let k = 0; k < 5; k++) tryWall(2 + mzRi(st, H - 3), 2 + mzRi(st, H - 3));
   }
   // 牆的樣子（只影響畫面）
-  for (let i = 0; i < N * N; i++) if (m[i]) { const x = i % N, y = (i / N) | 0; m[i] = (x === 0 || y === 0 || x === N - 1 || y === N - 1) ? 1 : 2 + ((Math.min(x, N - 1 - x) * 3 + Math.min(y, N - 1 - y) * 5) % 2); }
+  for (let i = 0; i < N * N; i++) if (m[i]) { const x = i % N, y = (i / N) | 0; m[i] = (x === 0 || y === 0 || x === N - 1 || y === N - 1) ? 1 : MP.kind === 'castle' ? (x === H || y === H ? 2 : 3) : 2 + ((Math.min(x, N - 1 - x) * 3 + Math.min(y, N - 1 - y) * 5) % 2); }
   return m;
 }
 function mzSpawn(st, p, i, far) {
-  let k = i;
+  let k = i; const S = MZ.START(st.n);
   if (far) {   // 找離敵人最遠的角落
     let best = -1;
-    MZ.START.forEach((s, j) => {
+    S.forEach((s, j) => {
       let d = 1e9; st.p.forEach((q, e) => { if (e === i || q.out || q.trap || mzTeam(st, e) === mzTeam(st, i)) return; const dx = q.x - (s[0] * MZ.U + 512), dy = q.y - (s[1] * MZ.U + 512); d = Math.min(d, dx * dx + dy * dy); });
       if (d > best) { best = d; k = j; }
     });
   }
-  const s = MZ.START[k]; p.x = s[0] * MZ.U + 512; p.y = s[1] * MZ.U + 512; p.a = s[2];
+  const s = S[k]; p.x = s[0] * MZ.U + 512; p.y = s[1] * MZ.U + 512; p.a = s[2];
 }
-function mzNew(seed, roster, tm = 0) {
+function mzNew(seed, roster, tm = 0, mp = 0) {
   const st = { r: (seed >>> 0) % 0x7fffffff || 7, t: 0, over: -1, tm: tm ? 1 : 0, p: [], b: [] };
+  st.mp = mp >= 0 && MZ.MAPS[mp] ? mp : mzRi(st, MZ.MAPS.length);   // -1：隨機
+  st.n = MZ.MAPS[st.mp].N;
   st.m = mzMap(st);
   roster.forEach((ro, i) => { const p = { x: 0, y: 0, a: 0, sc: 0, hit: 0, trap: 0, inv: 0, cd: 0, out: 0, bot: ro.bot ? 1 : 0, lv: ro.lv || 0, by: -1, wob: 0, ae: 0, shots: 0, mv: -99, lk: ro.lk == null ? -1 : ro.lk | 0 }; mzSpawn(st, p, i); st.p.push(p); });
   return st;
@@ -15845,7 +15866,7 @@ function mzRank(st) { return st.p.map((p, i) => i).sort((a, b) => st.p[b].sc - s
 // ---------- 電腦 ----------
 const MZ_LV = [{ turn: 3, err: 10, fire: .12, see: 6 }, { turn: 5, err: 5, fire: .3, see: 9 }, { turn: 9, err: 2, fire: .6, see: 14 }];
 function mzBot(st, i) {
-  const p = st.p[i], L = MZ_LV[p.lv] || MZ_LV[0], U = MZ.U, N = MZ.N;
+  const p = st.p[i], L = MZ_LV[p.lv] || MZ_LV[0], U = MZ.U, N = st.n;
   if (p.trap || p.out) return 0;
   // 目標：最近的敵人
   let tg = -1, td = 1e18;
@@ -15880,27 +15901,33 @@ function mzBot(st, i) {
   return v | ((a + 1) << 8);
 }
 // ---------- 畫面：斜上方俯視，鏡頭跟著自己，像素放大 ----------
-function mzScene(cv, W = 480, H = 300) {
+function mzScene(cv, W = 576, H = 360) {
   cv.width = W; cv.height = H;
   const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
   const T = 30, WH = 16;   // 一格幾點、牆有多高
   const looks = {};
   const spr = lk => looks[lk] || (looks[lk] = heroSprites(lk));
-  // 地板花紋（整張先畫好）
-  const N = MZ.N, flo = document.createElement('canvas'); flo.width = flo.height = N * T;
-  { const f = flo.getContext('2d');
+  // 地板花紋（每張地圖畫一次）
+  let N = 0, flo = null, floMp = -1;
+  const mkFloor = mp => {
+    const MP = MZ.MAPS[mp], fl = MP.fl; N = MP.N; floMp = mp;
+    flo = document.createElement('canvas'); flo.width = flo.height = N * T; const f = flo.getContext('2d');
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-      f.fillStyle = (x + y) % 2 ? '#8cc86a' : '#96d074'; f.fillRect(x * T, y * T, T, T);
-      if ((x * 7 + y * 11) % 5 === 0) { f.fillStyle = '#7ab85a'; f.fillRect(x * T + 8, y * T + 18, 3, 5); f.fillRect(x * T + 13, y * T + 16, 3, 7); }
-      if ((x * 5 + y * 3) % 9 === 0) { f.fillStyle = '#fff3a8'; f.fillRect(x * T + 20, y * T + 8, 3, 3); }
-    } }
+      f.fillStyle = (x + y) % 2 ? fl[0] : fl[1]; f.fillRect(x * T, y * T, T, T);
+      if (MP.kind === 'castle') { f.fillStyle = fl[2]; f.fillRect(x * T, y * T + T - 2, T, 2); f.fillRect(x * T + ((y % 2) ? 14 : 0), y * T, 2, T); continue; }
+      if ((x * 7 + y * 11) % 5 === 0) { f.fillStyle = fl[2]; f.fillRect(x * T + 8, y * T + 18, 3, 5); f.fillRect(x * T + 13, y * T + 16, 3, 7); }
+      if (MP.kind === 'maze' && mp === 0 && (x * 5 + y * 3) % 9 === 0) { f.fillStyle = '#fff3a8'; f.fillRect(x * T + 20, y * T + 8, 3, 3); }
+    }
+  };
   const WALLC = { 1: ['#7a5a3a', '#5a4030', '#4a3020'], 2: ['#a8b2c2', '#7a8494', '#5a6474'], 3: ['#d09a5a', '#a06a32', '#7a4a22'] };
   // view：{ me, aim（弧度）, prev, lerp, names }，回傳 { ox, oy } 讓滑鼠換算位置
   return (st, view) => {
+    if (st.mp !== floMp) mkFloor(st.mp);
     const U = MZ.U, k = view.lerp == null ? 1 : view.lerp, L = (a, b) => a + (b - a) * k;
     const pos = i => { const q = st.p[i], qp = view.prev && view.prev.p[i]; const ok = qp && Math.abs(qp.x - q.x) < 600 && Math.abs(qp.y - q.y) < 600; return [(ok ? L(qp.x, q.x) : q.x) / U * T, (ok ? L(qp.y, q.y) : q.y) / U * T]; };
     const [mx, my] = pos(view.me);
-    const ox = Math.round(Math.max(-40, Math.min(N * T + 40 - W, mx - W / 2))), oy = Math.round(Math.max(-60, Math.min(N * T + 20 - H, my - H / 2)));
+    const fit = (full, v, lo, hi, c) => full + lo + hi <= v ? Math.round((full - v) / 2) : Math.round(Math.max(-lo, Math.min(full + hi - v, c - v / 2)));
+    const ox = fit(N * T, W, 40, 40, mx), oy = fit(N * T, H, 60, 20, my);
     g.fillStyle = '#2a3a2a'; g.fillRect(0, 0, W, H);
     g.drawImage(flo, -ox, -oy);
     // 依照列（y）由上往下畫：先畫這一列的牆，再畫站在這一列的人和泡泡
@@ -15980,7 +16007,7 @@ function mzScene(cv, W = 480, H = 300) {
 }
 // 小地圖：只看得到自己和隊友
 function mzMini(cv, st, me, ang) {
-  const N = MZ.N, C = 8; cv.width = cv.height = N * C; const g = cv.getContext('2d');
+  const N = st.n, C = 8; cv.width = cv.height = N * C; const g = cv.getContext('2d');
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { g.fillStyle = st.m[y * N + x] ? '#5a4030' : '#e8dcc0'; g.fillRect(x * C, y * C, C, C); }
   st.p.forEach((p, i) => {
     if (p.out || (i !== me && (!st.tm || mzTeam(st, i) !== mzTeam(st, me)))) return;
@@ -16000,11 +16027,11 @@ function mzPlay(o) {
     const mine = net ? o.mySlot : 0;
     const names = roster.map((r, i) => r.bot ? `電腦${MZ.CNAME[i]}` : r.n || '玩家');
     const tm = o.tm ? 1 : 0;
-    let st = mzNew(net ? o.seed : (Math.random() * 1e9) | 0, roster, tm);
+    let st = mzNew(net ? o.seed : (Math.random() * 1e9) | 0, roster, tm, o.mp == null ? -1 : o.mp);
     const k = Math.min((innerHeight - 120) / 300, (innerWidth - 330) / 480);
     $('ov').innerHTML = `<div class="bmwrap mzwrap px" id="mzwrap">
       <div class="bmside mzside"><canvas id="mzMini" class="mzmini"></canvas><div id="mzSide"></div></div>
-      <div class="bmstage"><div class="bmtop"><span class="bmmap">${tm ? '2 對 2' : '各自為戰'}</span><span id="mzClock" class="skclock"></span><span id="mzX2" class="mzx2"></span><button class="pbtn small gray" id="mzQuit">離開</button></div>
+      <div class="bmstage"><div class="bmtop"><span class="bmmap">${MZ.MAPS[st.mp].n}・${tm ? '2 對 2' : '各自為戰'}</span><span id="mzClock" class="skclock"></span><span id="mzX2" class="mzx2"></span><button class="pbtn small gray" id="mzQuit">離開</button></div>
         <div class="mzview"><canvas id="mzCv" style="width:${Math.round(480 * k)}px;height:${Math.round(300 * k)}px"></canvas><div class="mzmsg" id="mzMsg"></div><div class="mzhelp">W A S D（或方向鍵）走路　滑鼠瞄準　空白鍵／滑鼠左鍵 吹泡泡　不用滑鼠時，會朝走路的方向吹</div></div>
         <div class="tbcount" id="mzCount"></div><div class="bmnote" id="mzNote"></div></div></div>`;
     const draw = mzScene($('mzCv'));
@@ -16234,7 +16261,7 @@ function mzPlay(o) {
 }
 
 // =====================================================================
-//  泡泡迷宮戰的連線：跟寶石炸彈陣一樣，每個人只送「按鍵有變的時候」＋心跳
+//  吹泡迷宮戰的連線：跟寶石炸彈陣一樣，每個人只送「按鍵有變的時候」＋心跳
 
 const mzRoom = {
   async create() {
@@ -16244,7 +16271,7 @@ const mzRoom = {
     for (let i = 0; i < 8 && !code; i++) {
       const c = String(1000 + Math.floor(Math.random() * 9000));
       let r;
-      try { r = await D.runTransaction(D.ref(db, `mz/rooms/${c}`), cur => (cur && cur.host) ? undefined : { host: uid, hn: me.name, st: 'lobby', round: 0, cpu: true, lv: 1, tm: 0, pl: { [uid]: { n: me.name, s: 0, lk: me.look | 0 } }, ts: Date.now() }); }
+      try { r = await D.runTransaction(D.ref(db, `mz/rooms/${c}`), cur => (cur && cur.host) ? undefined : { host: uid, hn: me.name, st: 'lobby', round: 0, cpu: true, lv: 1, tm: 0, mp: -1, pl: { [uid]: { n: me.name, s: 0, lk: me.look | 0 } }, ts: Date.now() }); }
       catch (e) { console.warn(e); return toast(`開房失敗（${e.code || e.message}），請老師確認已經部署`, 4000); }
       if (r.committed) code = c;
     }
@@ -16307,7 +16334,7 @@ const mzRoom = {
       last = go.round;
       const mySlot = go.roster.findIndex(r => r.u === uid);
       if (typeof gameChat !== 'undefined') gameChat.open(base);   // 遊戲中也能聊天
-      const r = await mzPlay({ mode: 'net', tm: go.tm, roster: go.roster, mySlot, seed: go.seed, startAt: go.startAt, net: bmNet(tbNet.play('mz', code, go.round), uid, go.roster, mySlot, host) });
+      const r = await mzPlay({ mode: 'net', tm: go.tm, mp: go.mp, roster: go.roster, mySlot, seed: go.seed, startAt: go.startAt, net: bmNet(tbNet.play('mz', code, go.round), uid, go.roster, mySlot, host) });
       if (typeof gameChat !== 'undefined') gameChat.close();
       if (!r || !r.again) break;
       if (host) D.update(D.ref(db, base), { st: 'lobby' });
@@ -16348,8 +16375,10 @@ const mzRoom = {
       if (host) {
         $('lbOpt').innerHTML = `<label><input type="checkbox" id="lbCpu"> 🤖 電腦補位（空位由電腦加入）</label>
           <select id="lbLv"><option value="0">新手電腦</option><option value="1">普通電腦</option><option value="2">高手電腦</option></select>
-          <label>玩法 <select id="lbTm"><option value="0">各自為戰</option><option value="1">2 對 2</option></select></label>`;
+          <label>玩法 <select id="lbTm"><option value="0">各自為戰</option><option value="1">2 對 2</option></select></label>
+          <label>地圖 <select id="lbMp"><option value="-1">隨機</option>${MZ.MAPS.map((m, k) => `<option value="${k}">${m.n}</option>`).join('')}</select></label>`;
         $('lbTm').onchange = () => D.update(roomRef, { tm: +$('lbTm').value });
+        $('lbMp').onchange = () => D.update(roomRef, { mp: +$('lbMp').value });
         $('lbCpu').onchange = () => D.update(roomRef, { cpu: $('lbCpu').checked });
         $('lbLv').onchange = () => D.update(roomRef, { lv: +$('lbLv').value });
       }
@@ -16360,11 +16389,11 @@ const mzRoom = {
         const ps = people(room), roster = ps.map(p => p.lk == null ? { u: p.u, n: p.n } : { u: p.u, n: p.n, lk: p.lk });
         if (room.cpu) while (roster.length < 4) roster.push({ bot: 1, lv: room.lv || 0 });
         const round = (room.round || 0) + 1, start = tbNet.now() + 3500, seed = (Math.random() * 1e9) | 0;
-        const tm = room.tm ? 1 : 0;
-        const up = { st: 'go', round, start, seed, ro: roster, tm };
+        const tm = room.tm ? 1 : 0, mp = room.mp == null ? -1 : room.mp;
+        const up = { st: 'go', round, start, seed, ro: roster, tm, mp };
         ps.forEach(p => { up[`pl/${p.u}/r`] = null; });
         await D.update(roomRef, up);
-        end({ round, roster, startAt: start - tbNet.off, seed, tm });
+        end({ round, roster, startAt: start - tbNet.off, seed, tm, mp });
       };
       const RG = roomWait(() => { toast('房主離開了，房間關閉'); end(null); });
       subs.push(() => RG.stop());
@@ -16381,15 +16410,15 @@ const mzRoom = {
         for (let i = ps.length; i < 4; i++) html += i < ps.length + bots ? `<div class="lbp" style="border-color:${CC[i]}"><div class="lbn" style="color:${CC[i]}">🤖 電腦${MZ.CNAME[i]}</div>${tag(i)}<div class="lbs on">${['新手', '普通', '高手'][v.lv || 0]}</div></div>` : `<div class="lbp"><div class="lbn wait">空位</div>${tag(i)}<div class="lbs">等朋友加入</div></div>`;
         $('lbPs').innerHTML = html;
         if (host) {
-          $('lbCpu').checked = !!v.cpu; $('lbLv').value = String(v.lv || 0); $('lbLv').disabled = !v.cpu; $('lbTm').value = String(v.tm || 0);
+          $('lbCpu').checked = !!v.cpu; $('lbLv').value = String(v.lv || 0); $('lbLv').disabled = !v.cpu; $('lbTm').value = String(v.tm || 0); $('lbMp').value = String(v.mp == null ? -1 : v.mp);
           $('lbStart').disabled = !canStart(v) || busy;
           if (!busy) $('lbTip').textContent = ps.length < 2 && !v.cpu ? '等朋友輸入房號加入，或打開「電腦補位」' : v.tm && !v.cpu && ps.length < 4 ? '2 對 2 要 4 個人，或打開「電腦補位」' : canStart(v) ? '大家都準備好了，按「開始」！' : '等大家按「準備」';
         } else {
-          $('lbOpt').innerHTML = `<span class="tbsub">電腦補位：${v.cpu ? '開（' + ['新手', '普通', '高手'][v.lv || 0] + '）' : '關'}　玩法：${v.tm ? '2 對 2' : '各自為戰'}</span>`;
+          $('lbOpt').innerHTML = `<span class="tbsub">電腦補位：${v.cpu ? '開（' + ['新手', '普通', '高手'][v.lv || 0] + '）' : '關'}　玩法：${v.tm ? '2 對 2' : '各自為戰'}　地圖：${v.mp == null || v.mp < 0 ? '隨機' : MZ.MAPS[v.mp].n}</span>`;
           const r = !!(v.pl[uid] && v.pl[uid].r);
           $('lbReady').textContent = r ? '取消準備' : '準備'; $('lbReady').className = 'pbtn big ' + (r ? 'gray' : 'blue');
           $('lbTip').textContent = r ? '等房主按「開始」' : '準備好就按「準備」';
-          if ((v.round || 0) > lastRound && v.st === 'go' && v.start && v.seed != null && v.ro) end({ round: v.round, roster: v.ro, startAt: v.start - tbNet.off, seed: v.seed, tm: v.tm || 0 });
+          if ((v.round || 0) > lastRound && v.st === 'go' && v.start && v.seed != null && v.ro) end({ round: v.round, roster: v.ro, startAt: v.start - tbNet.off, seed: v.seed, tm: v.tm || 0, mp: v.mp == null ? -1 : v.mp });
         }
       }));
     });
@@ -16404,7 +16433,7 @@ function mzOpen() {
   if (typeof tbAllowed === 'function' && !tbAllowed()) return toast('老師目前沒有開放對戰遊戲喔！');
   world.active = false; UI.busy = true;
   const online = typeof netRoom !== 'undefined' && typeof tbNet !== 'undefined' && tbNet.ready();
-  $('ov').innerHTML = `<div class="tbmenu px"><h2> 泡泡迷宮戰</h2>
+  $('ov').innerHTML = `<div class="tbmenu px"><h2> 吹泡迷宮戰</h2>
     <p class="tbsub">帶著自己的勇者在迷宮裡找到對手，吹泡泡把他包起來！<br><b>W A S D</b>（或方向鍵）走路、<b>滑鼠</b>瞄準、<b>空白鍵</b>或滑鼠左鍵吹泡泡。<br>包住別人 ＋1 分（最後 30 秒 ＋2 分）；被包住 3 秒後回到出發點。2 分鐘後分數最高的贏！</p>
     <div class="tbbtns" id="mzBtns">
       ${online ? `<button class="pbtn green big" id="mzCreate">🏠 開房間（2～4 人）</button><button class="pbtn blue big" id="mzJoin">🔑 輸入房號加入</button>` : ''}
@@ -16413,10 +16442,11 @@ function mzOpen() {
     ${online ? '' : '<p class="tbsub">多人開房要在連線版才能玩。</p>'}</div>`;
   $('mzBack').onclick = () => { $('ov').innerHTML = ''; UI.busy = false; world.active = true; updateHUD(); };
   $('mzCpu').onclick = () => {
-    let n = 3, tm = 0;
+    let n = 3, tm = 0, mp = -1;
     const draw = () => {
       if (tm) n = 3;
       $('mzBtns').innerHTML = `<p class="tbsub" style="margin:0">玩法：<button class="pbtn small ${!tm ? 'green' : 'gray'}" style="width:110px" data-tm="0">各自為戰</button> <button class="pbtn small ${tm ? 'green' : 'gray'}" style="width:110px" data-tm="1">2 對 2</button></p>
+        <p class="tbsub" style="margin:0">地圖：<button class="pbtn small ${mp < 0 ? 'green' : 'gray'}" style="width:76px" data-mp="-1">隨機</button> ${MZ.MAPS.map((x, k) => `<button class="pbtn small ${k === mp ? 'green' : 'gray'}" style="width:96px" data-mp="${k}">${x.n}</button>`).join(' ')}</p>
         <p class="tbsub" style="margin:0">電腦人數：
         ${[1, 2, 3].map(k => `<button class="pbtn small ${k === n ? 'green' : 'gray'}" style="width:76px" data-n="${k}" ${tm && k !== 3 ? 'disabled' : ''}>${k} 個</button>`).join(' ')}</p>
         <p class="tbsub" style="margin:0;min-height:1.4em">${tm ? '你和一個電腦隊友，對上兩個電腦' : '每個人都是對手'}</p>
@@ -16424,7 +16454,8 @@ function mzOpen() {
         <button class="pbtn gray" id="mzLvBack">返回</button>`;
       $('mzBtns').querySelectorAll('[data-n]').forEach(b => b.onclick = () => { n = +b.dataset.n; draw(); });
       $('mzBtns').querySelectorAll('[data-tm]').forEach(b => b.onclick = () => { tm = +b.dataset.tm; draw(); });
-      $('mzBtns').querySelectorAll('[data-lv]').forEach(b => b.onclick = () => mzPlay({ mode: 'cpu', level: +b.dataset.lv, bots: n, tm }).then(mzOpenAgain));
+      $('mzBtns').querySelectorAll('[data-mp]').forEach(b => b.onclick = () => { mp = +b.dataset.mp; draw(); });
+      $('mzBtns').querySelectorAll('[data-lv]').forEach(b => b.onclick = () => mzPlay({ mode: 'cpu', level: +b.dataset.lv, bots: n, tm, mp }).then(mzOpenAgain));
       $('mzLvBack').onclick = mzOpenAgain;
     };
     draw();
